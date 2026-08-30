@@ -117,6 +117,19 @@ code { color: var(--ink); }
 .ledger { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; margin-top: 1.5rem; background: oklch(83% 0.05 151); border: 1px solid oklch(83% 0.05 151); }
 .ledger article { padding: 1rem; background: var(--surface); }
 .ledger p { margin: .3rem 0 0; color: var(--muted); font-size: .75rem; overflow-wrap: anywhere; }
+.handoff-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; margin-top: 2.5rem; padding-top: 2rem; border-top: 1px solid oklch(83% 0.05 151); }
+.handoff-grid h3 { margin-bottom: .85rem; }
+.handoff-list { margin: 0; padding: 0; list-style: none; }
+.handoff-list li { display: grid; gap: .2rem; padding: .7rem 0; border-top: 1px solid oklch(86% 0.03 151); }
+.handoff-list span { color: var(--muted); font-size: .78rem; }
+.audit-list li { grid-template-columns: 1fr auto; gap: 1rem; }
+.audit-list span { font-variant-numeric: tabular-nums; }
+.handoff-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; margin-top: 2rem; }
+.handoff-actions .primary, .handoff-actions .secondary { min-height: 2.65rem; margin: 0; }
+.authorization-record { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 2rem; margin: 1.5rem 0 0; padding-top: .75rem; border-top: 1px solid oklch(83% 0.05 151); }
+.authorization-record div { padding: .75rem 0; border-bottom: 1px solid oklch(86% 0.03 151); }
+.authorization-record dt { color: var(--muted); font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+.authorization-record dd { margin: .3rem 0 0; overflow-wrap: anywhere; font-size: .82rem; }
 
 @media (max-width: 760px) {
   .demo-label { display: none; }
@@ -127,7 +140,7 @@ code { color: var(--ink); }
   .progress ol { overflow-x: auto; grid-template-columns: repeat(5, minmax(6.5rem, 1fr)); }
   .status-band, .page-heading { align-items: flex-start; }
   .plan-layout, .authorization, .brief-panel { grid-template-columns: 1fr; gap: 2.5rem; }
-  .ledger { grid-template-columns: 1fr; }
+  .ledger, .handoff-grid, .authorization-record { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 500px) {

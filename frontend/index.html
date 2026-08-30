@@ -109,7 +109,7 @@
           <div class="section-heading">
             <div>
               <p class="eyebrow">Operating plan</p>
-              <h2 id="agenda-title">Agenda</h2>
+              <h2 id="agenda-title" tabindex="-1">Agenda</h2>
             </div>
             <button class="text-button" type="button" disabled title="Editing is part of the next build slice">Edit plan</button>
           </div>
@@ -159,6 +159,27 @@
         <h2 id="confirmation-title">3 simulated reservations confirmed</h2>
         <p>The confirmed plan total is <span id="confirmation-total">$7,940</span>. Repeating this request will return the same ledger.</p>
         <div id="confirmation-ledger" class="ledger"></div>
+        <div class="handoff-grid">
+          <section aria-labelledby="prep-title">
+            <h3 id="prep-title">Preparation checklist</h3>
+            <ul class="handoff-list" id="preparation-list"></ul>
+          </section>
+          <section aria-labelledby="audit-title">
+            <h3 id="audit-title">Decision trail</h3>
+            <ol class="handoff-list audit-list" id="audit-list"></ol>
+          </section>
+        </div>
+        <div class="handoff-actions">
+          <button class="primary" id="open-plan-button" type="button">Open operating plan</button>
+          <button class="secondary" id="copy-summary-button" type="button">Copy confirmation summary</button>
+          <button class="text-button" id="authorization-record-button" type="button" aria-expanded="false" aria-controls="authorization-record">View authorization record</button>
+        </div>
+        <dl class="authorization-record" id="authorization-record" hidden>
+          <div><dt>Plan</dt><dd><code id="record-plan-id"></code></dd></div>
+          <div><dt>Approval</dt><dd><code id="record-approval-id"></code></dd></div>
+          <div><dt>Scope</dt><dd id="record-scope"></dd></div>
+          <div><dt>Expires</dt><dd id="record-expiry"></dd></div>
+        </dl>
       </section>
     </main>
     <script src="/product/app.js" defer></script>

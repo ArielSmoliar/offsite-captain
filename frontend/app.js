@@ -3,6 +3,10 @@ const state = {
   sessionHash: `browser-${crypto.randomUUID()}`,
   approvalKey: crypto.randomUUID(),
   requestKey: crypto.randomUUID(),
+  coordinatedAt: null,
+  validatedAt: null,
+  approval: null,
+  ledger: null,
 };
 
 const consent = document.querySelector("#consent");
@@ -99,7 +103,63 @@ function setStep(index) {
 }
 
 function titleCase(value) {
-  return value.replaceAll("-", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+  return value.replaceAll(/[-_]/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function formatTime(value) {
+  return new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+  }).format(new Date(value));
+}
+
+function renderHandoff(ledger) {
+  const attendees = new Map(state.review.brief.attendees.map((person) => [person.id, person.name]));
+  const sessions = new Map(state.review.plan.agenda.map((session) => [session.id, session.title]));
+  document.querySelector("#preparation-list").replaceChildren(
+    ...state.review.plan.preparation.map((task) => {
+      const item = document.createElement("li");
+      const artifact = document.createElement("strong");
+      const detail = document.createElement("span");
+      artifact.textContent = task.artifact;
+      detail.textContent = `${attendees.get(task.owner_attendee_id)} · ${sessions.get(task.session_id)} · due Oct 9`;
+      item.append(artifact, detail);
+      return item;
+    }),
+  );
+
+  const auditEvents = [
+    ["Coordinated", state.coordinatedAt],
+    ["Deterministic checks passed", state.validatedAt],
+    ["Exact plan authorized", state.approval?.authorized_at],
+    ["Simulated reservations confirmed", state.confirmedAt],
+  ];
+  document.querySelector("#audit-list").replaceChildren(...auditEvents.map(([label, timestamp]) => {
+    const item = document.createElement("li");
+    const event = document.createElement("strong");
+    const time = document.createElement("span");
+    event.textContent = label;
+    time.textContent = formatTime(timestamp);
+    item.append(event, time);
+    return item;
+  }));
+
+  document.querySelector("#record-plan-id").textContent = state.review.plan_hash;
+  document.querySelector("#record-approval-id").textContent = state.approval.id;
+  document.querySelector("#record-scope").textContent = state.approval.authorized_actions.map(titleCase).join(", ");
+  document.querySelector("#record-expiry").textContent = new Date(state.approval.expires_at).toLocaleString();
+}
+
+function confirmationSummary() {
+  const attendees = new Map(state.review.brief.attendees.map((person) => [person.id, person.name]));
+  const confirmations = state.ledger.reservations
+    .map((item) => `${titleCase(item.inventory_id)}: ${item.confirmation_id}`)
+    .join("\n");
+  const preparation = state.review.plan.preparation
+    .map((task) => `${task.artifact}: ${attendees.get(task.owner_attendee_id)}, due Oct 9`)
+    .join("\n");
+  return `Offsite Captain confirmation\nNew York · October 12–14, 2026\nPlan ${state.review.plan_hash}\n\nSimulated reservations\n${confirmations}\n\nPreparation\n${preparation}`;
 }
 
 function renderReview(review) {
@@ -185,6 +245,7 @@ document.querySelector("#coordinate-button").addEventListener("click", async (ev
     });
     if (!result.findings.length) throw new Error("No validation findings were returned.");
     state.review = await request(`/product/api/review?session_hash=${encodeURIComponent(state.sessionHash)}`);
+    state.coordinatedAt = new Date().toISOString();
     document.querySelector("#plan-id").textContent = state.review.plan_hash.slice(0, 12);
     renderReview(state.review);
     const traceItems = [...document.querySelectorAll("[data-trace]")];
@@ -214,6 +275,7 @@ document.querySelector("#coordinate-button").addEventListener("click", async (ev
 });
 
 document.querySelector("#apply-fixes").addEventListener("click", () => {
+  state.validatedAt = new Date().toISOString();
   document.querySelector("#issues").hidden = true;
   document.querySelector("#review-status").hidden = false;
   document.querySelector("#plan-layout").hidden = false;
@@ -248,6 +310,7 @@ authorizeButton.addEventListener("click", async () => {
         idempotency_key: state.approvalKey,
       }),
     });
+    state.approval = { ...approval, authorized_at: new Date().toISOString() };
     const expires = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(new Date(approval.expires_at));
     statusTitle.textContent = `Authorized until ${expires}`;
     statusCopy.textContent = "The exact reviewed plan may now create three simulated reservations.";
@@ -275,6 +338,8 @@ reserveButton.addEventListener("click", async () => {
         request_key: state.requestKey,
       }),
     });
+    state.ledger = ledger;
+    state.confirmedAt = new Date().toISOString();
     const ledgerElement = document.querySelector("#confirmation-ledger");
     ledgerElement.replaceChildren(...ledger.reservations.map((reservation) => {
       const article = document.createElement("article");
@@ -289,10 +354,33 @@ reserveButton.addEventListener("click", async () => {
     statusCopy.textContent = "Three simulated reservations were created atomically.";
     actionMessage.textContent = "Already completed requests safely return this same ledger.";
     document.querySelector("#confirmation").hidden = false;
+    renderHandoff(ledger);
     document.querySelector("#confirmation").scrollIntoView({ behavior: "smooth", block: "center" });
     setStep(4);
   } catch (error) {
     handleReservationFailure(error);
     reserveButton.disabled = false;
   }
+});
+
+document.querySelector("#open-plan-button").addEventListener("click", () => {
+  document.querySelector("#agenda-title").scrollIntoView({ behavior: "smooth", block: "start" });
+  document.querySelector("#agenda-title").focus?.();
+});
+
+document.querySelector("#copy-summary-button").addEventListener("click", async (event) => {
+  try {
+    await navigator.clipboard.writeText(confirmationSummary());
+    event.currentTarget.textContent = "Summary copied";
+  } catch {
+    event.currentTarget.textContent = "Copy unavailable";
+  }
+});
+
+document.querySelector("#authorization-record-button").addEventListener("click", (event) => {
+  const record = document.querySelector("#authorization-record");
+  const expanded = event.currentTarget.getAttribute("aria-expanded") === "true";
+  event.currentTarget.setAttribute("aria-expanded", String(!expanded));
+  event.currentTarget.textContent = expanded ? "View authorization record" : "Hide authorization record";
+  record.hidden = expanded;
 });

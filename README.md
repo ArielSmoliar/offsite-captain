@@ -121,9 +121,11 @@ inventory changes, and network interruptions to distinct, safe recovery paths.
 
 The deterministic coordination core, live Gemini/ADK path, evaluated action
 boundary, session-isolated product API, and review/approval UI are implemented.
-The next build slices are durable persistence, operating-plan handoff, and
-deployment readiness. Deployment and any hackathon submission remain explicit
-human-approved actions.
+The confirmation state now provides an operating handoff with exact simulated
+confirmation IDs, preparation owners, a decision trail, a copyable summary, and
+the preserved authorization record. The next build slices are durable
+persistence and deployment readiness. Deployment and any hackathon submission
+remain explicit human-approved actions.
 
 ## License
 
