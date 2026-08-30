@@ -25,23 +25,63 @@
           <p class="lede">October 12–14, 2026 · Six attendees · Five origins</p>
         </div>
         <div class="budget" aria-label="Budget status">
-          <span>Plan total</span>
-          <strong>$7,940</strong>
-          <small>$560 under budget</small>
+          <span id="budget-label">Budget limit</span>
+          <strong id="budget-total">$8,500</strong>
+          <small id="budget-detail">No commitments yet</small>
         </div>
       </section>
 
       <nav class="progress" aria-label="Offsite progress">
         <ol>
-          <li class="complete"><span>1</span>Brief</li>
-          <li class="complete"><span>2</span>Coordinate</li>
-          <li class="current" aria-current="step"><span>3</span>Review</li>
+          <li class="current" aria-current="step"><span>1</span>Brief</li>
+          <li><span>2</span>Coordinate</li>
+          <li><span>3</span>Review</li>
           <li><span>4</span>Authorize</li>
           <li><span>5</span>Confirm</li>
         </ol>
       </nav>
 
-      <section class="status-band" aria-live="polite">
+      <section class="brief-panel" id="brief-panel" aria-labelledby="brief-title">
+        <div class="brief-intro">
+          <p class="eyebrow">Brief ready</p>
+          <h2 id="brief-title">Coordinate the constraints before the calendar</h2>
+          <p>Six teammates are flying to New York from five origins. The plan must protect arrival buffers, complete three required sessions, assign preparation work, and remain within $8,500.</p>
+          <button class="primary" id="coordinate-button" type="button">Coordinate offsite</button>
+          <p class="action-message">Builds a proposal. Nothing will be reserved.</p>
+        </div>
+        <dl class="brief-facts">
+          <div><dt>Travel</dt><dd>New York, San Francisco, London, Berlin, Tel Aviv</dd></div>
+          <div><dt>Outcomes</dt><dd>Strategy, fundraising, roadmap</dd></div>
+          <div><dt>Needs</dt><dd>Vegetarian meal, step-free access</dd></div>
+          <div><dt>Commitments</dt><dd>Hotel, meeting room, team activity</dd></div>
+        </dl>
+      </section>
+
+      <section class="coordination" id="coordination" hidden aria-labelledby="coordination-title">
+        <p class="eyebrow">Coordination trace</p>
+        <h2 id="coordination-title">Building one feasible plan</h2>
+        <ol class="trace" aria-live="polite">
+          <li data-trace="0"><span></span>Read six traveler constraints</li>
+          <li data-trace="1"><span></span>Compare hotel, room, and activity inventory</li>
+          <li data-trace="2"><span></span>Draft agenda and preparation assignments</li>
+          <li data-trace="3"><span></span>Run deterministic feasibility checks</li>
+        </ol>
+      </section>
+
+      <section class="issues" id="issues" hidden aria-labelledby="issues-title">
+        <div class="issues-heading">
+          <div><p class="eyebrow">Needs attention</p><h2 id="issues-title">Three conflicts block this draft</h2></div>
+          <span>Nothing has been reserved</span>
+        </div>
+        <div class="issue-list">
+          <article><span class="issue-number">1</span><div><h3>Protect Leo’s arrival buffer</h3><p>Product strategy begins before Leo has four hours after his London arrival.</p><strong>Move strategy from 9:00 AM to 2:00 PM.</strong></div></article>
+          <article><span class="issue-number">2</span><div><h3>Resolve the room conflict</h3><p>Team cooking overlaps Roadmap and competes for the active schedule.</p><strong>Move Team cooking to 4:30 PM.</strong></div></article>
+          <article><span class="issue-number">3</span><div><h3>Assign required preparation</h3><p>Fundraising and Roadmap do not have owned preparation artifacts.</p><strong>Add two documents with owners and Oct 9 deadlines.</strong></div></article>
+        </div>
+        <button class="primary apply-fixes" id="apply-fixes" type="button">Apply 3 fixes</button>
+      </section>
+
+      <section class="status-band" id="review-status" hidden aria-live="polite">
         <div>
           <span class="status-dot" aria-hidden="true"></span>
           <div>
@@ -63,7 +103,7 @@
         </ul>
       </section>
 
-      <div class="plan-layout">
+      <div class="plan-layout" id="plan-layout" hidden>
         <section class="agenda" aria-labelledby="agenda-title">
           <div class="section-heading">
             <div>
@@ -123,7 +163,7 @@
         </aside>
       </div>
 
-      <section class="authorization" id="authorization" aria-labelledby="authorization-title">
+      <section class="authorization" id="authorization" hidden aria-labelledby="authorization-title">
         <div class="authorization-copy">
           <p class="eyebrow">Human decision required</p>
           <h2 id="authorization-title">Review the exact commitment</h2>

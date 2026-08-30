@@ -11,6 +11,7 @@ const reserveButton = document.querySelector("#reserve-button");
 const actionMessage = document.querySelector("#action-message");
 const statusTitle = document.querySelector("#status-title");
 const statusCopy = document.querySelector("#status-copy");
+const progressItems = [...document.querySelectorAll(".progress li")];
 
 async function request(path, options = {}) {
   const response = await fetch(path, {
@@ -29,6 +30,55 @@ function setBusy(button, busy, busyLabel, idleLabel) {
   button.disabled = busy;
   button.textContent = busy ? busyLabel : idleLabel;
 }
+
+function setStep(index) {
+  progressItems.forEach((item, itemIndex) => {
+    item.classList.toggle("complete", itemIndex < index);
+    item.classList.toggle("current", itemIndex === index);
+    if (itemIndex === index) item.setAttribute("aria-current", "step");
+    else item.removeAttribute("aria-current");
+  });
+}
+
+document.querySelector("#coordinate-button").addEventListener("click", async (event) => {
+  setBusy(event.currentTarget, true, "Coordinating…", "Coordinate offsite");
+  document.querySelector("#brief-panel").hidden = true;
+  document.querySelector("#coordination").hidden = false;
+  setStep(1);
+  try {
+    const result = await request("/product/api/coordinate", { method: "POST" });
+    if (!result.findings.length) throw new Error("No validation findings were returned.");
+    const traceItems = [...document.querySelectorAll("[data-trace]")];
+    const shortMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const delay = shortMotion ? 20 : 360;
+    for (const item of traceItems) {
+      item.classList.add("active");
+      await new Promise((resolve) => window.setTimeout(resolve, delay));
+      item.classList.remove("active");
+      item.classList.add("complete");
+    }
+    document.querySelector("#coordination").hidden = true;
+    document.querySelector("#issues").hidden = false;
+    document.querySelector("#issues-title").focus?.();
+  } catch (error) {
+    document.querySelector("#coordination-title").textContent = "Coordination paused";
+    const message = document.createElement("p");
+    message.textContent = `${error.message} Nothing has been reserved.`;
+    document.querySelector("#coordination").append(message);
+  }
+});
+
+document.querySelector("#apply-fixes").addEventListener("click", () => {
+  document.querySelector("#issues").hidden = true;
+  document.querySelector("#review-status").hidden = false;
+  document.querySelector("#plan-layout").hidden = false;
+  document.querySelector("#authorization").hidden = false;
+  document.querySelector("#budget-label").textContent = "Plan total";
+  document.querySelector("#budget-total").textContent = "$7,940";
+  document.querySelector("#budget-detail").textContent = "$560 under budget";
+  setStep(2);
+  document.querySelector("#review-status").scrollIntoView({ behavior: "smooth", block: "start" });
+});
 
 document.querySelector("#show-evidence").addEventListener("click", (event) => {
   const evidence = document.querySelector("#evidence");
@@ -61,6 +111,7 @@ authorizeButton.addEventListener("click", async () => {
     authorizeButton.hidden = true;
     consent.parentElement.hidden = true;
     reserveButton.hidden = false;
+    setStep(3);
   } catch (error) {
     actionMessage.textContent = error.message;
     authorizeButton.disabled = false;
@@ -94,6 +145,7 @@ reserveButton.addEventListener("click", async () => {
     actionMessage.textContent = "Already completed requests safely return this same ledger.";
     document.querySelector("#confirmation").hidden = false;
     document.querySelector("#confirmation").scrollIntoView({ behavior: "smooth", block: "center" });
+    setStep(4);
   } catch (error) {
     actionMessage.textContent = `${error.message} Nothing was partially reserved.`;
     reserveButton.disabled = false;

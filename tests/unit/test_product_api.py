@@ -20,6 +20,19 @@ def test_review_exposes_decision_ready_plan() -> None:
     assert body["reservation_status"].endswith("human_authorization_required")
 
 
+def test_coordinate_exposes_three_defect_classes_without_reserving() -> None:
+    response = client().post("/product/api/coordinate")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert {finding["code"] for finding in body["findings"]} == {
+        "ARRIVAL_BUFFER",
+        "DOUBLE_BOOKED",
+        "PREP_MISSING",
+    }
+    assert body["reservation_status"] == "not_created"
+
+
 def test_http_boundary_requires_authorization_before_reservation() -> None:
     test_client = client()
     review = test_client.get("/product/api/review").json()

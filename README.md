@@ -107,8 +107,9 @@ Live ADK tests are deliberately opt-in because they invoke Vertex AI:
 RUN_LIVE_ADK_TESTS=1 uv run pytest tests/integration -q
 ```
 
-Current deterministic baseline: 15 unit tests passing, including authorization,
-expiry, inventory failure, idempotency, and atomic booking behavior.
+Current deterministic baseline: 16 unit tests passing, including coordination,
+validation, authorization, expiry, inventory failure, idempotency, and atomic
+booking behavior.
 
 ## Status
 

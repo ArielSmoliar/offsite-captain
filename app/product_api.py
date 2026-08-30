@@ -7,6 +7,8 @@ from pydantic import BaseModel, ConfigDict
 
 from app.booking import BookingError
 from app.coordinator import OffsiteCoordinator
+from app.scenarios import BRIEF, invalid_plan
+from app.validators import validate_plan
 
 router = APIRouter(prefix="/product/api", tags=["product"])
 coordinator = OffsiteCoordinator()
@@ -37,6 +39,19 @@ def get_review() -> dict[str, Any]:
         "plan_hash": packet.plan_hash,
         "finding_count": packet.finding_count,
         "reservation_status": packet.reservation_status,
+    }
+
+
+@router.post("/coordinate")
+def coordinate() -> dict[str, Any]:
+    """Run the committed defective draft through deterministic validation."""
+    draft = invalid_plan()
+    findings = validate_plan(BRIEF, draft)
+    return {
+        "brief": BRIEF.model_dump(mode="json"),
+        "draft": draft.model_dump(mode="json"),
+        "findings": [finding.model_dump(mode="json") for finding in findings],
+        "reservation_status": "not_created",
     }
 
 
