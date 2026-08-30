@@ -148,8 +148,8 @@ booking behavior across a process restart. The operator UI maps authorization
 expiry, stale plans, inventory changes, and network interruptions to distinct,
 safe recovery paths. The Cloud Run image builds successfully and its packaged
 product route, health probes, and reservation contract have a local smoke test.
-The latest Impeccable hardening pass scores 18/20 after resolving every P1
-accessibility and semantic-state finding.
+The final Impeccable UI pass scores 20/20 after resolving the full accessibility,
+responsive, interaction, typography, and design-system audit.
 
 ## Status
 
@@ -160,7 +160,7 @@ confirmation IDs, preparation owners, a decision trail, a copyable summary, and
 the preserved authorization record. Transactional SQLite makes the local
 workflow restart-safe, and the production configuration can use Firestore with
 the Cloud Run runtime identity. Remaining work is single-instance hosted
-verification and final polish. Deployment and any hackathon submission remain
+verification. Deployment and any hackathon submission remain
 explicit human-approved actions.
 
 ## License

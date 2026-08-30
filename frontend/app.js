@@ -267,12 +267,7 @@ async function coordinateOffsite(trigger) {
     state.coordinatedAt = new Date().toISOString();
     document.querySelector("#plan-id").textContent = state.review.plan_hash.slice(0, 12);
     renderReview(state.review);
-    const shortMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const delay = shortMotion ? 20 : 360;
     for (const item of traceItems) {
-      item.classList.add("active");
-      item.querySelector(".trace-state").textContent = "In progress";
-      await new Promise((resolve) => window.setTimeout(resolve, delay));
       item.classList.remove("active");
       item.classList.add("complete");
       item.querySelector(".trace-state").textContent = "Complete";

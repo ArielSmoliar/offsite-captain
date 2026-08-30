@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-30T00:00:00Z",
+  "title": "Design System: Offsite Captain",
+  "extensions": {
+    "colorMeta": {
+      "ink": { "role": "neutral", "displayName": "Run-Sheet Ink", "canonical": "oklch(24% 0.018 70)", "tonalRamp": ["oklch(15% 0.018 70)", "oklch(25% 0.018 70)", "oklch(35% 0.018 70)", "oklch(45% 0.018 70)", "oklch(60% 0.014 70)", "oklch(75% 0.011 70)", "oklch(87% 0.009 70)", "oklch(95% 0.006 70)"] },
+      "paper": { "role": "neutral", "displayName": "Warm Paper", "canonical": "oklch(98% 0.008 82)", "tonalRamp": ["oklch(15% 0.008 82)", "oklch(25% 0.008 82)", "oklch(35% 0.008 82)", "oklch(45% 0.008 82)", "oklch(60% 0.008 82)", "oklch(75% 0.008 82)", "oklch(87% 0.008 82)", "oklch(95% 0.008 82)"] },
+      "terracotta": { "role": "primary", "displayName": "Decision Terracotta", "canonical": "oklch(47% 0.11 42)", "tonalRamp": ["oklch(15% 0.05 42)", "oklch(25% 0.075 42)", "oklch(35% 0.095 42)", "oklch(47% 0.11 42)", "oklch(60% 0.10 42)", "oklch(72% 0.075 42)", "oklch(84% 0.05 42)", "oklch(95% 0.02 42)"] },
+      "success": { "role": "semantic", "displayName": "Verified Green", "canonical": "oklch(45% 0.09 151)", "tonalRamp": ["oklch(15% 0.04 151)", "oklch(25% 0.06 151)", "oklch(35% 0.08 151)", "oklch(45% 0.09 151)", "oklch(60% 0.08 151)", "oklch(72% 0.06 151)", "oklch(84% 0.04 151)", "oklch(95% 0.025 151)"] },
+      "info": { "role": "semantic", "displayName": "Context Blue", "canonical": "oklch(43% 0.08 245)", "tonalRamp": ["oklch(15% 0.035 245)", "oklch(25% 0.055 245)", "oklch(35% 0.07 245)", "oklch(43% 0.08 245)", "oklch(60% 0.07 245)", "oklch(72% 0.055 245)", "oklch(84% 0.04 245)", "oklch(95% 0.025 245)"] },
+      "warning": { "role": "semantic", "displayName": "Attention Ochre", "canonical": "oklch(42% 0.085 72)", "tonalRamp": ["oklch(15% 0.035 72)", "oklch(25% 0.055 72)", "oklch(35% 0.075 72)", "oklch(42% 0.085 72)", "oklch(60% 0.075 72)", "oklch(72% 0.055 72)", "oklch(84% 0.04 72)", "oklch(95% 0.025 72)"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Page Title", "purpose": "One fixed-scale product title." },
+      "headline": { "displayName": "Section Heading", "purpose": "Major workflow regions." },
+      "body": { "displayName": "Operator Copy", "purpose": "Plans, explanations, and decisions." },
+      "label": { "displayName": "Operational Label", "purpose": "Eyebrows and terse metadata." }
+    },
+    "shadows": [
+      { "name": "authorization-lift", "value": "0 18px 50px oklch(30% 0.02 70 / 0.09)", "purpose": "Only the exact-scope authorization boundary." }
+    ],
+    "motion": [
+      { "name": "state-ease", "value": "180ms cubic-bezier(.25, 1, .5, 1)", "purpose": "Direct hover, active, and state feedback." }
+    ],
+    "breakpoints": [
+      { "name": "stack", "value": "760px" },
+      { "name": "compact", "value": "500px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The next consequential workflow action.",
+      "html": "<button class=\"ds-primary\">Authorize exact plan</button>",
+      "css": ".ds-primary { min-height: 3rem; padding: .7rem 1rem; border: 1px solid var(--accent); border-radius: .5rem; background: var(--accent); color: var(--surface); font: 760 1rem Inter, sans-serif; transition: background 180ms cubic-bezier(.25,1,.5,1), transform 180ms cubic-bezier(.25,1,.5,1); } .ds-primary:hover { background: var(--accent-hover); } .ds-primary:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; } .ds-primary:active { transform: translateY(1px); }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "A reversible supporting action.",
+      "html": "<button class=\"ds-secondary\">Try coordination again</button>",
+      "css": ".ds-secondary { min-height: 3rem; padding: .7rem 1rem; border: 1px solid var(--line); border-radius: .5rem; background: transparent; color: var(--ink); font: 720 1rem Inter, sans-serif; } .ds-secondary:hover { border-color: var(--accent); color: var(--accent); } .ds-secondary:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }"
+    },
+    {
+      "name": "Text Action",
+      "kind": "button",
+      "refersTo": "text-action",
+      "description": "A 44px disclosure control that remains visually quiet.",
+      "html": "<button class=\"ds-text-action\">View validation evidence</button>",
+      "css": ".ds-text-action { min-height: 2.75rem; padding: .65rem .25rem; border: 0; background: transparent; color: var(--accent); font: 700 1rem Inter, sans-serif; } .ds-text-action:hover { color: var(--accent-hover); } .ds-text-action:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }"
+    },
+    {
+      "name": "Status Band",
+      "kind": "custom",
+      "description": "Text-plus-color status for validation and recovery.",
+      "html": "<div class=\"ds-status\"><span class=\"ds-status-dot\"></span><div><strong>Ready for review</strong><p>All 11 checks passed. Nothing has been reserved.</p></div></div>",
+      "css": ".ds-status { display: flex; align-items: center; gap: .85rem; padding: 1.2rem 1.35rem; border: 1px solid oklch(83% .05 151); border-radius: .75rem; background: var(--success-soft); color: var(--ink); font-family: Inter, sans-serif; } .ds-status p { margin: .2rem 0 0; color: oklch(34% .06 151); font-size: .87rem; } .ds-status-dot { width: .7rem; height: .7rem; border-radius: 50%; background: var(--success); }"
+    },
+    {
+      "name": "Authorization Surface",
+      "kind": "card",
+      "description": "The only elevated surface, reserved for exact-scope approval.",
+      "html": "<section class=\"ds-authorization\"><small>HUMAN AUTHORIZATION</small><h2>Approve this exact plan</h2><p>Nothing is reserved until you authorize.</p></section>",
+      "css": ".ds-authorization { padding: 2.5rem; border: 1px solid var(--line); border-radius: .9rem; background: var(--surface); color: var(--ink); box-shadow: 0 18px 50px oklch(30% .02 70 / .09); font-family: Inter, sans-serif; } .ds-authorization small { color: var(--accent); font-weight: 760; letter-spacing: .1em; } .ds-authorization h2 { margin: .55rem 0; } .ds-authorization p { color: var(--muted); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Operations Run Sheet",
+    "overview": "Offsite Captain should feel like the clean, annotated run sheet a trusted chief of staff brings into a high-stakes planning meeting. Information is calm and ordered, state changes are explicit, and the plan remains the primary object.",
+    "keyCharacteristics": ["Calm, precise, and accountable", "Editorial structure with product-native controls", "Restrained color with unmistakable semantic states", "Explicit separation of proposal, authorization, and reservation"],
+    "rules": [
+      { "name": "The One Decision Rule", "body": "Terracotta occupies no more than ten percent of a screen and always points to the next consequential action.", "section": "colors" },
+      { "name": "The Text Plus Color Rule", "body": "Every semantic color is paired with a title, status message, or state label.", "section": "colors" },
+      { "name": "The Fixed Product Scale Rule", "body": "Product headings use fixed rem sizes with one mobile adjustment. Fluid marketing typography is prohibited.", "section": "typography" },
+      { "name": "The Earned Elevation Rule", "body": "A surface receives shadow only when its decision weight is greater than its surroundings.", "section": "elevation" }
+    ],
+    "dos": ["Do make the operating plan the primary object.", "Do keep every text action at least 44px high.", "Do label proposal, authorization, and reservation as separate states."],
+    "donts": ["Don't build chat-first experiences.", "Don't use repeated-card SaaS dashboards.", "Don't imitate travel-marketplace urgency.", "Don't present false reservation certainty.", "Don't use decorative motion or novelty controls."]
+  }
+}

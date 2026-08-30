@@ -121,7 +121,6 @@ Let the operator verify feasibility and cost before authorization.
 - Cost summary: $7,940 total, $560 remaining within the $8,500 budget.
 - Persistent statement: `Nothing has been reserved.`
 - Primary action: `Review authorization`.
-- Secondary action: `Edit plan`.
 
 ### Clarity requirements
 
@@ -155,7 +154,8 @@ Authorization does not immediately reserve. The resulting state explicitly says
 
 - Never use a vague button such as `Approve`, `Continue`, or `Book now`.
 - Distinguish authorization from reservation in both labels and status copy.
-- Keep `Edit plan` available; editing invalidates the authorization visibly.
+- Do not expose an edit affordance until scoped editing and authorization
+  invalidation are implemented together.
 
 ## Screen 6: Reservation execution
 
