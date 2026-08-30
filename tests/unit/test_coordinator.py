@@ -1,7 +1,7 @@
 import pytest
 
 from app.booking import AuthorizationRequired
-from app.coordinator import OffsiteCoordinator
+from app.coordinator import CoordinatorRegistry, OffsiteCoordinator
 
 
 def test_review_packet_is_valid_and_requires_human_authorization() -> None:
@@ -59,3 +59,50 @@ def test_authorization_rejects_a_stale_or_tampered_plan_hash() -> None:
             plan_hash="stale-plan",
             idempotency_key="approve-1",
         )
+
+
+def test_registry_isolates_inventory_and_approvals_by_browser_session() -> None:
+    registry = CoordinatorRegistry()
+    session_a = registry.for_session("browser-session-a")
+    session_b = registry.for_session("browser-session-b")
+    packet = session_a.review()
+
+    session_a.authorize(
+        session_hash="browser-session-a",
+        plan_hash=packet.plan_hash,
+        idempotency_key="approve-session-a",
+    )
+    session_a.reserve(
+        session_hash="browser-session-a",
+        plan_hash=packet.plan_hash,
+        request_key="reserve-session-a",
+    )
+
+    with pytest.raises(AuthorizationRequired):
+        session_b.reserve(
+            session_hash="browser-session-b",
+            plan_hash=packet.plan_hash,
+            request_key="reserve-session-b",
+        )
+
+    session_b.authorize(
+        session_hash="browser-session-b",
+        plan_hash=packet.plan_hash,
+        idempotency_key="approve-session-b",
+    )
+    ledger_b = session_b.reserve(
+        session_hash="browser-session-b",
+        plan_hash=packet.plan_hash,
+        request_key="reserve-session-b",
+    )
+    assert len(ledger_b.reservations) == 3
+
+
+def test_registry_evicts_oldest_session_at_capacity() -> None:
+    registry = CoordinatorRegistry(max_sessions=2)
+    first = registry.for_session("browser-session-a")
+    registry.for_session("browser-session-b")
+    registry.for_session("browser-session-c")
+
+    assert registry.session_count == 2
+    assert registry.for_session("browser-session-a") is not first

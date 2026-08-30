@@ -1,6 +1,8 @@
 """Application service joining the proposal, approval, and booking boundary."""
 
+from collections import OrderedDict
 from dataclasses import dataclass
+from threading import RLock
 
 from app.approvals import ApprovalRecord, ApprovalStore
 from app.booking import BookingEngine
@@ -22,8 +24,12 @@ class ReviewPacket:
 class OffsiteCoordinator:
     """Backend-owned workflow facade; the ADK agent never receives this object."""
 
-    def __init__(self) -> None:
-        plan = valid_plan()
+    def __init__(self, plan: CandidatePlan | None = None) -> None:
+        plan = plan or valid_plan()
+        if findings := validate_plan(BRIEF, plan):
+            codes = ", ".join(sorted({finding.code for finding in findings}))
+            raise ValueError(f"coordinator requires a valid plan: {codes}")
+        self._plan = plan
         available_by_slot = {
             claim.slot_key: claim.quantity
             for selection in plan.inventory
@@ -33,7 +39,7 @@ class OffsiteCoordinator:
         self._booking = BookingEngine(self._approvals, available_by_slot)
 
     def review(self) -> ReviewPacket:
-        plan = valid_plan()
+        plan = self._plan
         findings = validate_plan(BRIEF, plan)
         return ReviewPacket(
             brief=BRIEF,
@@ -67,3 +73,43 @@ class OffsiteCoordinator:
             plan=packet.plan,
             request_key=request_key,
         )
+
+
+class CoordinatorRegistry:
+    """Bounded session isolation for local/demo workflow state."""
+
+    def __init__(self, max_sessions: int = 128) -> None:
+        if max_sessions < 1:
+            raise ValueError("max_sessions must be positive")
+        self._max_sessions = max_sessions
+        self._sessions: OrderedDict[str, OffsiteCoordinator] = OrderedDict()
+        self._lock = RLock()
+
+    def for_session(self, session_hash: str) -> OffsiteCoordinator:
+        with self._lock:
+            if coordinator := self._sessions.get(session_hash):
+                self._sessions.move_to_end(session_hash)
+                return coordinator
+
+            coordinator = OffsiteCoordinator()
+            self._sessions[session_hash] = coordinator
+            if len(self._sessions) > self._max_sessions:
+                self._sessions.popitem(last=False)
+            return coordinator
+
+    def set_plan(
+        self, session_hash: str, plan: CandidatePlan
+    ) -> OffsiteCoordinator:
+        """Start a fresh session workflow bound to one validated exact plan."""
+        coordinator = OffsiteCoordinator(plan)
+        with self._lock:
+            self._sessions[session_hash] = coordinator
+            self._sessions.move_to_end(session_hash)
+            if len(self._sessions) > self._max_sessions:
+                self._sessions.popitem(last=False)
+        return coordinator
+
+    @property
+    def session_count(self) -> int:
+        with self._lock:
+            return len(self._sessions)

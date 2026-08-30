@@ -40,14 +40,95 @@ function setStep(index) {
   });
 }
 
+function titleCase(value) {
+  return value.replaceAll("-", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function renderReview(review) {
+  const totalCents = review.plan.inventory.reduce(
+    (sum, selection) => sum + selection.quantity * selection.unit_cost_cents,
+    0,
+  );
+  const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+  const total = money.format(totalCents / 100);
+  document.querySelector("#budget-total").textContent = total;
+  document.querySelector("#budget-detail").textContent = `${money.format((review.brief.budget_cents - totalCents) / 100)} under budget`;
+  document.querySelector("#authorization-total").textContent = total;
+  document.querySelector("#confirmation-total").textContent = total;
+  const attendeeNames = new Map(review.brief.attendees.map((attendee) => [attendee.id, attendee.name]));
+  const grouped = new Map();
+  for (const session of review.plan.agenda) {
+    const date = session.starts_at.slice(0, 10);
+    if (!grouped.has(date)) grouped.set(date, []);
+    grouped.get(date).push(session);
+  }
+  const agendaDays = document.querySelector("#agenda-days");
+  agendaDays.replaceChildren(...[...grouped.entries()].map(([date, sessions]) => {
+    const day = document.createElement("div");
+    day.className = "day";
+    const heading = document.createElement("div");
+    heading.className = "day-heading";
+    const dayName = document.createElement("strong");
+    dayName.textContent = new Intl.DateTimeFormat("en-US", { weekday: "long", month: "short", day: "numeric", timeZone: review.brief.timezone }).format(new Date(`${date}T12:00:00-04:00`));
+    const zone = document.createElement("span");
+    zone.textContent = review.brief.timezone;
+    heading.append(dayName, zone);
+    day.append(heading);
+    for (const session of sessions) {
+      const article = document.createElement("article");
+      article.className = `session${session.id === "activity" ? " activity" : ""}`;
+      const time = document.createElement("time");
+      time.textContent = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", timeZone: review.brief.timezone }).format(new Date(session.starts_at));
+      const detail = document.createElement("div");
+      const title = document.createElement("h3");
+      title.textContent = session.title;
+      const people = session.required_attendee_ids.length === review.brief.attendees.length
+        ? "All attendees"
+        : session.required_attendee_ids.map((id) => attendeeNames.get(id)).join(", ");
+      const room = session.room_inventory_id ? titleCase(session.room_inventory_id) : titleCase(session.title);
+      const durationHours = (new Date(session.ends_at) - new Date(session.starts_at)) / 3600000;
+      const meta = document.createElement("p");
+      meta.textContent = `${people} · ${room} · ${durationHours} ${durationHours === 1 ? "hour" : "hours"}`;
+      const ready = document.createElement("span");
+      ready.className = "check";
+      ready.textContent = "Ready";
+      detail.append(title, meta);
+      article.append(time, detail, ready);
+      day.append(article);
+    }
+    return day;
+  }));
+
+  const commitments = document.querySelector("#commitment-list");
+  commitments.replaceChildren(...review.plan.inventory.map((selection) => {
+    const row = document.createElement("div");
+    const name = document.createElement("dt");
+    const quantity = document.createElement("dd");
+    const cost = document.createElement("dd");
+    name.textContent = titleCase(selection.inventory_id);
+    quantity.textContent = `${selection.quantity} ${selection.kind === "hotel" ? "room nights" : selection.kind === "room" ? "meeting days" : "attendees"}`;
+    cost.textContent = money.format(selection.quantity * selection.unit_cost_cents / 100);
+    row.append(name, quantity, cost);
+    return row;
+  }));
+  const owners = new Set(review.plan.preparation.map((task) => task.owner_attendee_id));
+  document.querySelector("#preparation-summary").textContent = `${review.plan.preparation.length} documents · ${owners.size} owners · Due Oct 9`;
+}
+
 document.querySelector("#coordinate-button").addEventListener("click", async (event) => {
   setBusy(event.currentTarget, true, "Coordinating…", "Coordinate offsite");
   document.querySelector("#brief-panel").hidden = true;
   document.querySelector("#coordination").hidden = false;
   setStep(1);
   try {
-    const result = await request("/product/api/coordinate?mode=live", { method: "POST" });
+    const result = await request("/product/api/coordinate?mode=live", {
+      method: "POST",
+      body: JSON.stringify({ session_hash: state.sessionHash }),
+    });
     if (!result.findings.length) throw new Error("No validation findings were returned.");
+    state.review = await request(`/product/api/review?session_hash=${encodeURIComponent(state.sessionHash)}`);
+    document.querySelector("#plan-id").textContent = state.review.plan_hash.slice(0, 12);
+    renderReview(state.review);
     const traceItems = [...document.querySelectorAll("[data-trace]")];
     const shortMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const delay = shortMotion ? 20 : 360;
@@ -80,8 +161,6 @@ document.querySelector("#apply-fixes").addEventListener("click", () => {
   document.querySelector("#plan-layout").hidden = false;
   document.querySelector("#authorization").hidden = false;
   document.querySelector("#budget-label").textContent = "Plan total";
-  document.querySelector("#budget-total").textContent = "$7,940";
-  document.querySelector("#budget-detail").textContent = "$560 under budget";
   setStep(2);
   document.querySelector("#review-status").scrollIntoView({ behavior: "smooth", block: "start" });
 });
@@ -157,15 +236,3 @@ reserveButton.addEventListener("click", async () => {
     reserveButton.disabled = false;
   }
 });
-
-request("/product/api/review")
-  .then((review) => {
-    state.review = review;
-    document.querySelector("#plan-id").textContent = review.plan_hash.slice(0, 12);
-    authorizeButton.disabled = !consent.checked;
-  })
-  .catch((error) => {
-    statusTitle.textContent = "Plan unavailable";
-    statusCopy.textContent = "The reviewed plan could not be loaded.";
-    actionMessage.textContent = error.message;
-  });

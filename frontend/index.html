@@ -114,43 +114,14 @@
             <button class="text-button" type="button" disabled title="Editing is part of the next build slice">Edit plan</button>
           </div>
 
-          <div class="day">
-            <div class="day-heading"><strong>Monday, Oct 12</strong><span>America/New_York</span></div>
-            <article class="session">
-              <time>2:00 PM</time>
-              <div><h3>Product strategy</h3><p>All attendees · Studio 4 · 2 hours</p></div>
-              <span class="check">Ready</span>
-            </article>
-            <article class="session">
-              <time>4:00 PM</time>
-              <div><h3>Fundraising</h3><p>Maya, Ari, Leo · Studio 4 · 1 hour</p></div>
-              <span class="check">Ready</span>
-            </article>
-          </div>
-
-          <div class="day">
-            <div class="day-heading"><strong>Tuesday, Oct 13</strong><span>America/New_York</span></div>
-            <article class="session">
-              <time>9:30 AM</time>
-              <div><h3>Roadmap</h3><p>All attendees · Studio 4 · 2.5 hours</p></div>
-              <span class="check">Ready</span>
-            </article>
-            <article class="session activity">
-              <time>4:30 PM</time>
-              <div><h3>Team cooking</h3><p>All attendees · Cooking Lab · 2 hours</p></div>
-              <span class="check">Ready</span>
-            </article>
-          </div>
+          <div id="agenda-days"></div>
         </section>
 
         <aside class="commitments" aria-labelledby="commitments-title">
           <div class="section-heading">
             <div><p class="eyebrow">Proposed commitments</p><h2 id="commitments-title">What will be reserved</h2></div>
           </div>
-          <dl class="commitment-list">
-            <div><dt>Harbor Hotel</dt><dd>5 rooms · 2 nights</dd><dd>$5,900</dd></div>
-            <div><dt>Studio 4</dt><dd>2 meeting days</dd><dd>$900</dd></div>
-            <div><dt>Cooking Lab</dt><dd>6 attendees</dd><dd>$1,140</dd></div>
+          <dl class="commitment-list" id="commitment-list">
           </dl>
           <div class="requirements">
             <h3>Requirements carried forward</h3>
@@ -159,7 +130,7 @@
           </div>
           <div class="prep">
             <h3>Preparation complete</h3>
-            <p>3 documents · 3 owners · Due Oct 9</p>
+            <p id="preparation-summary">3 documents · 3 owners · Due Oct 9</p>
           </div>
         </aside>
       </div>
@@ -168,7 +139,7 @@
         <div class="authorization-copy">
           <p class="eyebrow">Human decision required</p>
           <h2 id="authorization-title">Review the exact commitment</h2>
-          <p>This authorizes three simulated reservations totaling <strong>$7,940</strong>. It does not reserve them yet.</p>
+          <p>This authorizes three simulated reservations totaling <strong id="authorization-total">$7,940</strong>. It does not reserve them yet.</p>
           <p class="plan-id">Plan <code id="plan-id">loading</code> · Authorization expires after 10 minutes</p>
         </div>
         <div class="authorization-action">
@@ -185,7 +156,7 @@
       <section class="confirmation" id="confirmation" hidden aria-labelledby="confirmation-title">
         <p class="eyebrow">Operating handoff</p>
         <h2 id="confirmation-title">3 simulated reservations confirmed</h2>
-        <p>The confirmed plan total is $7,940. Repeating this request will return the same ledger.</p>
+        <p>The confirmed plan total is <span id="confirmation-total">$7,940</span>. Repeating this request will return the same ledger.</p>
         <div id="confirmation-ledger" class="ledger"></div>
       </section>
     </main>

@@ -112,16 +112,17 @@ to booking/approval bypass. The latest run passed response quality, hallucinatio
 the human action boundary, and tool policy at 100%. See
 [`docs/evaluation.md`](docs/evaluation.md) for evidence and reproduction commands.
 
-Current deterministic baseline: 19 unit tests passing, including coordination,
+Current deterministic baseline: 21 unit tests passing, including coordination,
 validation, authorization, expiry, inventory failure, idempotency, and atomic
 booking behavior.
 
 ## Status
 
-The deterministic coordination core, product API, and first review/approval UI
-are implemented. The next build slices are persistent demo state, complete
-exception handling, evaluation cases, and deployment. Deployment and any
-hackathon submission remain explicit human-approved actions.
+The deterministic coordination core, live Gemini/ADK path, evaluated action
+boundary, session-isolated product API, and review/approval UI are implemented.
+The next build slices are durable persistence, complete exception handling, and
+deployment readiness. Deployment and any hackathon submission remain explicit
+human-approved actions.
 
 ## License
 

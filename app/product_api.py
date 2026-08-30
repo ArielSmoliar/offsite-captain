@@ -1,12 +1,12 @@
 """HTTP boundary for the operator-facing Offsite Captain workflow."""
 
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, ConfigDict
+from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.booking import BookingError
-from app.coordinator import OffsiteCoordinator
+from app.coordinator import CoordinatorRegistry, OffsiteCoordinator
 from app.hashing import canonical_plan_hash
 from app.live_planner import coordinate_with_adk
 from app.scenarios import BRIEF, invalid_plan
@@ -14,6 +14,7 @@ from app.validators import validate_plan
 
 router = APIRouter(prefix="/product/api", tags=["product"])
 coordinator = OffsiteCoordinator()
+coordinators = CoordinatorRegistry()
 
 
 class StrictRequest(BaseModel):
@@ -21,20 +22,32 @@ class StrictRequest(BaseModel):
 
 
 class AuthorizationRequest(StrictRequest):
-    session_hash: str
-    plan_hash: str
-    idempotency_key: str
+    session_hash: str = Field(min_length=8, max_length=128)
+    plan_hash: str = Field(min_length=64, max_length=64)
+    idempotency_key: str = Field(min_length=8, max_length=128)
 
 
 class ReservationRequest(StrictRequest):
-    session_hash: str
-    plan_hash: str
-    request_key: str
+    session_hash: str = Field(min_length=8, max_length=128)
+    plan_hash: str = Field(min_length=64, max_length=64)
+    request_key: str = Field(min_length=8, max_length=128)
+
+
+class CoordinationRequest(StrictRequest):
+    session_hash: str = Field(min_length=8, max_length=128)
 
 
 @router.get("/review")
-def get_review() -> dict[str, Any]:
-    packet = coordinator.review()
+def get_review(
+    session_hash: Annotated[
+        str | None, Query(min_length=8, max_length=128)
+    ] = None,
+) -> dict[str, Any]:
+    packet = (
+        coordinators.for_session(session_hash).review()
+        if session_hash
+        else coordinator.review()
+    )
     return {
         "brief": packet.brief.model_dump(mode="json"),
         "plan": packet.plan.model_dump(mode="json"),
@@ -46,6 +59,7 @@ def get_review() -> dict[str, Any]:
 
 @router.post("/coordinate")
 async def coordinate(
+    request: CoordinationRequest,
     mode: Literal["deterministic", "live"] = "deterministic",
 ) -> dict[str, Any]:
     """Run the committed defective draft through deterministic validation."""
@@ -67,18 +81,22 @@ async def coordinate(
                 plan_hash=canonical_plan_hash(live.plan),
                 tool_trace=live.tool_trace,
             )
+            coordinators.set_plan(request.session_hash, live.plan)
         except Exception as exc:
             response.update(
                 agent_mode="deterministic_fallback",
                 fallback_reason=type(exc).__name__,
             )
+            coordinators.set_plan(request.session_hash, coordinator.review().plan)
+    else:
+        coordinators.set_plan(request.session_hash, coordinator.review().plan)
     return response
 
 
 @router.post("/authorize")
 def authorize(request: AuthorizationRequest) -> dict[str, Any]:
     try:
-        approval = coordinator.authorize(
+        approval = coordinators.for_session(request.session_hash).authorize(
             session_hash=request.session_hash,
             plan_hash=request.plan_hash,
             idempotency_key=request.idempotency_key,
@@ -97,7 +115,7 @@ def authorize(request: AuthorizationRequest) -> dict[str, Any]:
 @router.post("/reserve")
 def reserve(request: ReservationRequest) -> dict[str, Any]:
     try:
-        ledger = coordinator.reserve(
+        ledger = coordinators.for_session(request.session_hash).reserve(
             session_hash=request.session_hash,
             plan_hash=request.plan_hash,
             request_key=request.request_key,

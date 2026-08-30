@@ -22,7 +22,10 @@ def test_review_exposes_decision_ready_plan() -> None:
 
 
 def test_coordinate_exposes_three_defect_classes_without_reserving() -> None:
-    response = client().post("/product/api/coordinate")
+    response = client().post(
+        "/product/api/coordinate",
+        json={"session_hash": "coordinate-test-session"},
+    )
 
     assert response.status_code == 200
     body = response.json()
