@@ -3,6 +3,7 @@
 from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.product_api import router
@@ -14,4 +15,13 @@ app = FastAPI(
     description="Operator-facing offsite coordination and authorization workflow.",
 )
 app.include_router(router)
-app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="product")
+
+
+@app.get("/", include_in_schema=False)
+def product_home() -> RedirectResponse:
+    return RedirectResponse(url="/product/")
+
+
+app.mount(
+    "/product", StaticFiles(directory=FRONTEND_DIR, html=True), name="product"
+)

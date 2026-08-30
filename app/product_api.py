@@ -1,12 +1,14 @@
 """HTTP boundary for the operator-facing Offsite Captain workflow."""
 
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, ConfigDict
 
 from app.booking import BookingError
 from app.coordinator import OffsiteCoordinator
+from app.hashing import canonical_plan_hash
+from app.live_planner import coordinate_with_adk
 from app.scenarios import BRIEF, invalid_plan
 from app.validators import validate_plan
 
@@ -43,16 +45,34 @@ def get_review() -> dict[str, Any]:
 
 
 @router.post("/coordinate")
-def coordinate() -> dict[str, Any]:
+async def coordinate(
+    mode: Literal["deterministic", "live"] = "deterministic",
+) -> dict[str, Any]:
     """Run the committed defective draft through deterministic validation."""
     draft = invalid_plan()
     findings = validate_plan(BRIEF, draft)
-    return {
+    response: dict[str, Any] = {
         "brief": BRIEF.model_dump(mode="json"),
         "draft": draft.model_dump(mode="json"),
         "findings": [finding.model_dump(mode="json") for finding in findings],
         "reservation_status": "not_created",
+        "agent_mode": "deterministic",
     }
+    if mode == "live":
+        try:
+            live = await coordinate_with_adk()
+            response.update(
+                agent_mode="gemini_adk",
+                repaired_plan=live.plan.model_dump(mode="json"),
+                plan_hash=canonical_plan_hash(live.plan),
+                tool_trace=live.tool_trace,
+            )
+        except Exception as exc:
+            response.update(
+                agent_mode="deterministic_fallback",
+                fallback_reason=type(exc).__name__,
+            )
+    return response
 
 
 @router.post("/authorize")

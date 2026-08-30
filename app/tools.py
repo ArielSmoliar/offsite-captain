@@ -1,12 +1,14 @@
 """Bounded, read/propose-only ADK tools for the planning agent."""
 
+import hashlib
+import json
 from typing import Any
 
 from google.adk.tools import ToolContext
 from pydantic import ValidationError
 
 from app.models import CandidatePlan, InventoryKind
-from app.scenarios import BRIEF, inventory
+from app.scenarios import BRIEF, invalid_plan, inventory
 from app.validators import validate_plan
 
 
@@ -16,12 +18,20 @@ def _require_authorized_context(tool_context: ToolContext) -> None:
         raise ValueError("authorized offsite context is missing or invalid")
 
 
+def _candidate_fingerprint(candidate: dict[str, Any]) -> str:
+    encoded = json.dumps(
+        candidate, sort_keys=True, separators=(",", ":"), ensure_ascii=True
+    ).encode()
+    return hashlib.sha256(encoded).hexdigest()
+
+
 def read_constraints(tool_context: ToolContext) -> dict[str, Any]:
     """Read the authorized offsite brief and deterministic scheduling rules."""
     _require_authorized_context(tool_context)
     return {
         "status": "success",
         "brief": BRIEF.model_dump(mode="json"),
+        "initial_draft": invalid_plan().model_dump(mode="json"),
         "rules": {
             "domestic_arrival_buffer_hours": 2,
             "international_arrival_buffer_hours": 4,
@@ -57,21 +67,39 @@ def validate_candidate(
 ) -> dict[str, Any]:
     """Validate a candidate using backend-owned deterministic rules."""
     _require_authorized_context(tool_context)
+    fingerprint = _candidate_fingerprint(candidate)
+    cache = dict(tool_context.state.get("validation_cache", {}))
+    if cached := cache.get(fingerprint):
+        return cached
+    # One seeded draft plus at most two model-produced candidates.
+    if len(cache) >= 3:
+        return {
+            "status": "rejected",
+            "code": "VALIDATION_ATTEMPT_LIMIT",
+            "findings": [],
+        }
+
     try:
         plan = CandidatePlan.model_validate(candidate)
     except ValidationError as exc:
-        return {
+        response = {
             "status": "invalid",
             "code": "SCHEMA_INVALID",
             "errors": exc.errors(include_input=False, include_url=False),
         }
+        cache[fingerprint] = response
+        tool_context.state["validation_cache"] = cache
+        return response
 
     findings = validate_plan(BRIEF, plan)
-    return {
+    response = {
         "status": "valid" if not findings else "invalid",
         "total_cost_cents": plan.total_cost_cents,
         "findings": [finding.model_dump(mode="json") for finding in findings],
     }
+    cache[fingerprint] = response
+    tool_context.state["validation_cache"] = cache
+    return response
 
 
 def submit_candidate(

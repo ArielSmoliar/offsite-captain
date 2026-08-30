@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from app.product_api import router
+from app.product_app import app as product_app
 
 
 def client() -> TestClient:
@@ -48,3 +49,16 @@ def test_http_boundary_requires_authorization_before_reservation() -> None:
 
     assert response.status_code == 409
     assert response.json()["detail"]["code"] == "AUTHORIZATION_REQUIRED"
+
+
+def test_standalone_product_routes_page_and_assets_under_same_base() -> None:
+    test_client = TestClient(product_app)
+
+    home = test_client.get("/", follow_redirects=False)
+    page = test_client.get("/product/")
+    script = test_client.get("/product/app.js")
+
+    assert home.status_code == 307
+    assert home.headers["location"] == "/product/"
+    assert page.status_code == 200
+    assert script.status_code == 200

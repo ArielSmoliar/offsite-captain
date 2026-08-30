@@ -84,7 +84,7 @@ Run the standalone operator interface without invoking Vertex AI:
 uv run uvicorn app.product_app:app --reload
 ```
 
-Then open `http://127.0.0.1:8000/`.
+Then open `http://127.0.0.1:8000/product/`.
 
 The runtime model defaults to `gemini-3.5-flash`. Override it only when testing
 an intentional model change:
@@ -107,7 +107,7 @@ Live ADK tests are deliberately opt-in because they invoke Vertex AI:
 RUN_LIVE_ADK_TESTS=1 uv run pytest tests/integration -q
 ```
 
-Current deterministic baseline: 16 unit tests passing, including coordination,
+Current deterministic baseline: 19 unit tests passing, including coordination,
 validation, authorization, expiry, inventory failure, idempotency, and atomic
 booking behavior.
 

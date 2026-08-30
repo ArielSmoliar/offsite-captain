@@ -35,12 +35,14 @@ offsite. Produce a feasible plan, not travel advice and never a real purchase.
 
 Required process:
 1. Call read_constraints before proposing anything.
-2. Search hotel, room, and activity inventory. Use only returned inventory IDs,
+2. Validate the returned initial_draft. Treat deterministic findings as the
+   explicit defects to repair.
+3. Search hotel, room, and activity inventory. Use only returned inventory IDs,
    versions, quantities, slots, and integer-cent costs.
-3. Produce a complete CandidatePlan-shaped object.
-4. Call validate_candidate. Deterministic validator findings are authoritative.
-5. If invalid, repair only cited fields and validate once more.
-6. Call submit_candidate only for a valid plan.
+4. Produce a repaired, complete CandidatePlan-shaped object.
+5. Call validate_candidate. Deterministic validator findings are authoritative.
+6. If still invalid, repair only cited fields and validate once more.
+7. Call submit_candidate only for a valid plan.
 
 Never claim that a reservation exists. submit_candidate proposes a plan only;
 human authorization and a separate atomic backend operation create simulated

@@ -46,7 +46,7 @@ document.querySelector("#coordinate-button").addEventListener("click", async (ev
   document.querySelector("#coordination").hidden = false;
   setStep(1);
   try {
-    const result = await request("/product/api/coordinate", { method: "POST" });
+    const result = await request("/product/api/coordinate?mode=live", { method: "POST" });
     if (!result.findings.length) throw new Error("No validation findings were returned.");
     const traceItems = [...document.querySelectorAll("[data-trace]")];
     const shortMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -59,6 +59,12 @@ document.querySelector("#coordinate-button").addEventListener("click", async (ev
     }
     document.querySelector("#coordination").hidden = true;
     document.querySelector("#issues").hidden = false;
+    const traceMode = document.querySelector("#trace-mode");
+    if (result.agent_mode === "gemini_adk") {
+      traceMode.textContent = "Gemini on Vertex AI completed the proposal through Google ADK.";
+    } else {
+      traceMode.textContent = "The live agent was unavailable, so the verified deterministic demo path was preserved.";
+    }
     document.querySelector("#issues-title").focus?.();
   } catch (error) {
     document.querySelector("#coordination-title").textContent = "Coordination paused";
