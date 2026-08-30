@@ -38,22 +38,22 @@ application does not purchase travel or contact real hotels or venues.
 
 ## Architecture
 
-```text
-User brief
-   │
-   ▼
-Gemini 3.5 Flash on Vertex AI + Google ADK
-   │  bounded read/propose tools
-   ▼
-Deterministic validator ──► reviewable candidate + canonical plan hash
-                                      │
-                              explicit human approval
-                                      │
-                                      ▼
-                         atomic simulated booking engine
-                                      │
-                                      ▼
-                              confirmation ledger
+```mermaid
+flowchart TD
+    A[Operator brief] --> B[Gemini 3.5 Flash on Vertex AI]
+    B -->|Google ADK bounded read and propose tools| C[Candidate plan]
+    C --> D[Deterministic validator]
+    D -->|Conflicts| E[In-context repair]
+    E --> D
+    D -->|Feasible| F[Reviewable plan and canonical hash]
+    F --> G{Explicit human authorization}
+    G -->|Exact hash, scope, cost, expiry| H[Backend authorization record]
+    H --> I[Atomic simulated booking engine]
+    I --> J[(Firestore workflow state)]
+    I --> K[Idempotent confirmation ledger]
+    L[Cloud Run product API and UI] --- B
+    L --- D
+    L --- I
 ```
 
 Key modules:
