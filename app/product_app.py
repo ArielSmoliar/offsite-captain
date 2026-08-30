@@ -17,6 +17,16 @@ app = FastAPI(
 app.include_router(router)
 
 
+@app.get("/healthz", include_in_schema=False)
+def health() -> dict[str, str]:
+    return {"status": "ok"}
+
+
+@app.get("/readyz", include_in_schema=False)
+def ready() -> dict[str, str]:
+    return {"status": "ready"}
+
+
 @app.get("/", include_in_schema=False)
 def product_home() -> RedirectResponse:
     return RedirectResponse(url="/product/")

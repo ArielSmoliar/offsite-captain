@@ -1,6 +1,5 @@
 """HTTP boundary for the operator-facing Offsite Captain workflow."""
 
-import os
 from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, HTTPException, Query
@@ -10,18 +9,13 @@ from app.booking import BookingError
 from app.coordinator import CoordinatorRegistry, OffsiteCoordinator
 from app.hashing import canonical_plan_hash
 from app.live_planner import coordinate_with_adk
-from app.persistence import MemoryWorkflowRepository, SqliteWorkflowRepository
+from app.persistence import workflow_repository_from_env
 from app.scenarios import BRIEF, invalid_plan
 from app.validators import validate_plan
 
 router = APIRouter(prefix="/product/api", tags=["product"])
 coordinator = OffsiteCoordinator()
-state_db = os.getenv("OFFSITE_STATE_DB")
-repository = (
-    SqliteWorkflowRepository(state_db)
-    if state_db
-    else MemoryWorkflowRepository()
-)
+repository = workflow_repository_from_env()
 coordinators = CoordinatorRegistry(repository=repository)
 
 

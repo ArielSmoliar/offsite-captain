@@ -1,6 +1,7 @@
 """Durable workflow snapshot repositories for the product boundary."""
 
 import json
+import os
 import sqlite3
 from pathlib import Path
 from typing import Any, Protocol
@@ -62,3 +63,57 @@ class SqliteWorkflowRepository:
                     updated_at = CURRENT_TIMESTAMP""",
                 (session_hash, payload),
             )
+
+
+class FirestoreWorkflowRepository:
+    """Shared Cloud Run snapshot repository using application-default identity."""
+
+    def __init__(
+        self,
+        *,
+        project: str | None = None,
+        database: str = "(default)",
+        collection: str = "offsite_workflows",
+    ) -> None:
+        from google.cloud import firestore
+
+        self._client = firestore.Client(project=project, database=database)
+        self._collection = self._client.collection(collection)
+
+    def load(self, session_hash: str) -> dict[str, Any] | None:
+        document = self._collection.document(session_hash).get()
+        if not document.exists:
+            return None
+        data = document.to_dict() or {}
+        snapshot = data.get("snapshot")
+        return snapshot if isinstance(snapshot, dict) else None
+
+    def save(self, session_hash: str, snapshot: dict[str, Any]) -> None:
+        from google.cloud import firestore
+
+        self._collection.document(session_hash).set(
+            {
+                "snapshot": snapshot,
+                "updated_at": firestore.SERVER_TIMESTAMP,
+            }
+        )
+
+
+def workflow_repository_from_env() -> WorkflowRepository:
+    backend = os.getenv("OFFSITE_STATE_BACKEND", "memory").lower()
+    if backend == "memory":
+        return MemoryWorkflowRepository()
+    if backend == "sqlite":
+        path = os.getenv("OFFSITE_STATE_DB")
+        if not path:
+            raise RuntimeError("OFFSITE_STATE_DB is required for sqlite state")
+        return SqliteWorkflowRepository(path)
+    if backend == "firestore":
+        return FirestoreWorkflowRepository(
+            project=os.getenv("GOOGLE_CLOUD_PROJECT"),
+            database=os.getenv("FIRESTORE_DATABASE", "(default)"),
+            collection=os.getenv(
+                "OFFSITE_STATE_COLLECTION", "offsite_workflows"
+            ),
+        )
+    raise RuntimeError(f"unsupported OFFSITE_STATE_BACKEND: {backend}")

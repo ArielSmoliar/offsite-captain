@@ -97,6 +97,22 @@ transactional repository such as Firestore through the same `WorkflowRepository`
 boundary; container-local files are intentionally not presented as production
 durability.
 
+For Cloud Run, configure the shared Firestore adapter:
+
+```bash
+OFFSITE_STATE_BACKEND=firestore
+GOOGLE_CLOUD_PROJECT=your-project-id
+FIRESTORE_DATABASE=(default)
+OFFSITE_STATE_COLLECTION=offsite_workflows
+```
+
+The runtime service account uses application-default credentials and needs
+`roles/datastore.user`; no service-account key is stored in the application.
+The current snapshot adapter requires one Cloud Run instance to preserve the
+same serialized booking semantics as the in-process lock. Deploy with
+`--max-instances 1 --concurrency 8` until Firestore compare-and-swap transactions
+are implemented. Health probes are available at `/healthz` and `/readyz`.
+
 Then open `http://127.0.0.1:8000/product/`.
 
 The runtime model defaults to `gemini-3.5-flash`. Override it only when testing
@@ -125,7 +141,7 @@ to booking/approval bypass. The latest run passed response quality, hallucinatio
 the human action boundary, and tool policy at 100%. See
 [`docs/evaluation.md`](docs/evaluation.md) for evidence and reproduction commands.
 
-Current deterministic baseline: 24 unit tests passing, including coordination,
+Current deterministic baseline: 28 unit tests passing, including coordination,
 validation, authorization, expiry, inventory failure, idempotency, and atomic
 booking behavior across a process restart. The operator UI maps authorization expiry, stale plans,
 inventory changes, and network interruptions to distinct, safe recovery paths.
@@ -136,10 +152,11 @@ The deterministic coordination core, live Gemini/ADK path, evaluated action
 boundary, session-isolated product API, and review/approval UI are implemented.
 The confirmation state provides an operating handoff with exact simulated
 confirmation IDs, preparation owners, a decision trail, a copyable summary, and
-the preserved authorization record. A transactional SQLite repository now makes
-the local workflow restart-safe; the next build slices are the production
-Firestore adapter and deployment readiness. Deployment and any hackathon
-submission remain explicit human-approved actions.
+the preserved authorization record. Transactional SQLite makes the local
+workflow restart-safe, and the production configuration can use Firestore with
+the Cloud Run runtime identity. Remaining work is container execution,
+single-instance hosted verification, and final polish. Deployment and any
+hackathon submission remain explicit human-approved actions.
 
 ## License
 

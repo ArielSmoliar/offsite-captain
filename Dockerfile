@@ -21,6 +21,7 @@ WORKDIR /code
 COPY ./pyproject.toml ./README.md ./uv.lock* ./
 
 COPY ./app ./app
+COPY ./frontend ./frontend
 
 RUN uv sync --frozen
 
@@ -29,6 +30,9 @@ ENV COMMIT_SHA=${COMMIT_SHA}
 
 ARG AGENT_VERSION=0.0.0
 ENV AGENT_VERSION=${AGENT_VERSION}
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
 EXPOSE 8080
 

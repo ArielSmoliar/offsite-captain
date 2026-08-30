@@ -54,6 +54,16 @@ app.include_router(product_router)
 app.mount("/product", StaticFiles(directory="frontend", html=True), name="product")
 
 
+@app.get("/healthz", include_in_schema=False)
+def health() -> dict[str, str]:
+    return {"status": "ok"}
+
+
+@app.get("/readyz", include_in_schema=False)
+def ready() -> dict[str, str]:
+    return {"status": "ready"}
+
+
 @app.post("/feedback")
 def collect_feedback(feedback: Feedback) -> dict[str, str]:
     """Collect and log feedback.

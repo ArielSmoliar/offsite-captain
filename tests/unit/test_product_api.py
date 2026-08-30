@@ -85,8 +85,12 @@ def test_standalone_product_routes_page_and_assets_under_same_base() -> None:
     home = test_client.get("/", follow_redirects=False)
     page = test_client.get("/product/")
     script = test_client.get("/product/app.js")
+    health = test_client.get("/healthz")
+    ready = test_client.get("/readyz")
 
     assert home.status_code == 307
     assert home.headers["location"] == "/product/"
     assert page.status_code == 200
     assert script.status_code == 200
+    assert health.json() == {"status": "ok"}
+    assert ready.json() == {"status": "ready"}
