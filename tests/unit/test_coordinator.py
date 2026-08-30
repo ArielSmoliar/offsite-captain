@@ -49,6 +49,9 @@ def test_authorized_review_returns_idempotent_confirmation_ledger() -> None:
 
     assert repeated == first
     assert len(first.reservations) == 3
+    assert coordinator.review().reservation_status == (
+        "simulated_reservations_created"
+    )
 
 
 def test_authorization_rejects_a_stale_or_tampered_plan_hash() -> None:
@@ -144,3 +147,6 @@ def test_sqlite_repository_restores_authorization_and_idempotent_ledger(
 
     assert repeated == ledger
     assert len(repeated.reservations) == 3
+    assert second_restart.for_session(session_hash).review().reservation_status == (
+        "simulated_reservations_created"
+    )

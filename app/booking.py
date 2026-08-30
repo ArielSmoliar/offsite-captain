@@ -41,6 +41,15 @@ class BookingEngine:
         }
         self._lock = RLock()
 
+    def has_ledger_for(self, plan: CandidatePlan) -> bool:
+        plan_hash = canonical_plan_hash(plan)
+        with self._lock:
+            return any(
+                ledger.offsite_id == plan.offsite_id
+                and ledger.plan_hash == plan_hash
+                for ledger in self._ledgers.values()
+            )
+
     def book(
         self,
         *,

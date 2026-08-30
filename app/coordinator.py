@@ -55,12 +55,17 @@ class OffsiteCoordinator:
     def review(self) -> ReviewPacket:
         plan = self._plan
         findings = validate_plan(BRIEF, plan)
+        reservation_status = (
+            "simulated_reservations_created"
+            if self._booking.has_ledger_for(plan)
+            else "not_created_human_authorization_required"
+        )
         return ReviewPacket(
             brief=BRIEF,
             plan=plan,
             plan_hash=canonical_plan_hash(plan),
             finding_count=len(findings),
-            reservation_status="not_created_human_authorization_required",
+            reservation_status=reservation_status,
         )
 
     def authorize(
