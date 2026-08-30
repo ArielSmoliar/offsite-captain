@@ -8,22 +8,80 @@ const state = {
 const consent = document.querySelector("#consent");
 const authorizeButton = document.querySelector("#authorize-button");
 const reserveButton = document.querySelector("#reserve-button");
+const recoveryButton = document.querySelector("#recovery-button");
 const actionMessage = document.querySelector("#action-message");
 const statusTitle = document.querySelector("#status-title");
 const statusCopy = document.querySelector("#status-copy");
 const progressItems = [...document.querySelectorAll(".progress li")];
 
 async function request(path, options = {}) {
-  const response = await fetch(path, {
-    ...options,
-    headers: { "Content-Type": "application/json", ...options.headers },
-  });
-  const body = await response.json();
+  let response;
+  try {
+    response = await fetch(path, {
+      ...options,
+      headers: { "Content-Type": "application/json", ...options.headers },
+    });
+  } catch (cause) {
+    throw new ApiError("NETWORK_INTERRUPTION", "The connection was interrupted.", cause);
+  }
+  const body = await response.json().catch(() => ({}));
   if (!response.ok) {
-    const detail = body.detail?.message || body.detail || "The request could not be completed.";
-    throw new Error(detail);
+    const detail = body.detail;
+    throw new ApiError(
+      detail?.code || "REQUEST_FAILED",
+      detail?.message || (typeof detail === "string" ? detail : "The request could not be completed."),
+    );
   }
   return body;
+}
+
+class ApiError extends Error {
+  constructor(code, message, cause) {
+    super(message, { cause });
+    this.name = "ApiError";
+    this.code = code;
+  }
+}
+
+function showRecovery(label, handler) {
+  recoveryButton.textContent = label;
+  recoveryButton.hidden = false;
+  recoveryButton.onclick = handler;
+}
+
+function resetAuthorization() {
+  reserveButton.hidden = true;
+  authorizeButton.hidden = false;
+  consent.parentElement.hidden = false;
+  consent.checked = false;
+  authorizeButton.disabled = true;
+  state.approvalKey = crypto.randomUUID();
+  setStep(2);
+}
+
+function handleReservationFailure(error) {
+  if (error.code === "AUTHORIZATION_EXPIRED" || error.code === "AUTHORIZATION_REQUIRED") {
+    resetAuthorization();
+    statusTitle.textContent = "Authorization required";
+    statusCopy.textContent = "The reviewed plan is preserved. Authorize it again to continue.";
+    actionMessage.textContent = "No reservation was created.";
+    return;
+  }
+  if (error.code === "INVENTORY_UNAVAILABLE" || error.code === "PLAN_CHANGED") {
+    statusTitle.textContent = "Plan needs review";
+    statusCopy.textContent = "Availability or the exact plan changed. Nothing was partially reserved.";
+    actionMessage.textContent = error.message;
+    showRecovery("Refresh plan", () => window.location.reload());
+    return;
+  }
+  if (error.code === "NETWORK_INTERRUPTION") {
+    statusTitle.textContent = "Reservation status unknown";
+    statusCopy.textContent = "Keep this request open; retrying safely checks the same reservation request.";
+    actionMessage.textContent = "The connection was interrupted. Do not start a new plan.";
+    showRecovery("Check reservation status", () => reserveButton.click());
+    return;
+  }
+  actionMessage.textContent = `${error.message} Nothing was partially reserved.`;
 }
 
 function setBusy(button, busy, busyLabel, idleLabel) {
@@ -178,6 +236,7 @@ consent.addEventListener("change", () => {
 });
 
 authorizeButton.addEventListener("click", async () => {
+  recoveryButton.hidden = true;
   setBusy(authorizeButton, true, "Authorizing exact plan…", "Authorize plan");
   actionMessage.textContent = "";
   try {
@@ -204,6 +263,7 @@ authorizeButton.addEventListener("click", async () => {
 });
 
 reserveButton.addEventListener("click", async () => {
+  recoveryButton.hidden = true;
   setBusy(reserveButton, true, "Creating reservations…", "Create 3 reservations");
   actionMessage.textContent = "One atomic request is in progress.";
   try {
@@ -232,7 +292,7 @@ reserveButton.addEventListener("click", async () => {
     document.querySelector("#confirmation").scrollIntoView({ behavior: "smooth", block: "center" });
     setStep(4);
   } catch (error) {
-    actionMessage.textContent = `${error.message} Nothing was partially reserved.`;
+    handleReservationFailure(error);
     reserveButton.disabled = false;
   }
 });

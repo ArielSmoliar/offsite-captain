@@ -54,6 +54,31 @@ def test_http_boundary_requires_authorization_before_reservation() -> None:
     assert response.json()["detail"]["code"] == "AUTHORIZATION_REQUIRED"
 
 
+def test_http_boundary_names_stale_plan_recovery() -> None:
+    test_client = client()
+
+    response = test_client.post(
+        "/product/api/authorize",
+        json={
+            "session_hash": "stale-plan-session",
+            "plan_hash": "0" * 64,
+            "idempotency_key": "stale-plan-approval",
+        },
+    )
+
+    assert response.status_code == 409
+    assert response.json()["detail"]["code"] == "PLAN_CHANGED"
+
+
+def test_http_boundary_rejects_short_session_identifiers() -> None:
+    response = client().post(
+        "/product/api/coordinate",
+        json={"session_hash": "short"},
+    )
+
+    assert response.status_code == 422
+
+
 def test_standalone_product_routes_page_and_assets_under_same_base() -> None:
     test_client = TestClient(product_app)
 

@@ -109,6 +109,8 @@ code { color: var(--ink); }
 .primary:hover:not(:disabled) { background: var(--accent-hover); }
 .primary:active:not(:disabled) { transform: translateY(1px); }
 .primary:disabled { border-color: var(--line); background: var(--line); color: var(--muted); cursor: not-allowed; }
+.secondary { min-height: 3rem; margin-top: .65rem; padding: .7rem 1rem; border: 1px solid var(--line); border-radius: .5rem; background: transparent; color: var(--ink); font-weight: 720; cursor: pointer; }
+.secondary:hover { border-color: var(--accent); color: var(--accent); }
 .action-message { min-height: 1.3rem; margin: .7rem 0 0; color: var(--muted); font-size: .8rem; }
 .confirmation { margin-top: 2rem; padding: 2.5rem; border-radius: .9rem; background: var(--success-soft); border: 1px solid oklch(83% 0.05 151); }
 .confirmation > p:not(.eyebrow) { color: var(--muted); }

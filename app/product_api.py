@@ -102,7 +102,10 @@ def authorize(request: AuthorizationRequest) -> dict[str, Any]:
             idempotency_key=request.idempotency_key,
         )
     except ValueError as exc:
-        raise HTTPException(status_code=409, detail=str(exc)) from exc
+        raise HTTPException(
+            status_code=409,
+            detail={"code": "PLAN_CHANGED", "message": str(exc)},
+        ) from exc
     return {
         "id": approval.id,
         "status": approval.status,
@@ -121,7 +124,10 @@ def reserve(request: ReservationRequest) -> dict[str, Any]:
             request_key=request.request_key,
         )
     except ValueError as exc:
-        raise HTTPException(status_code=409, detail=str(exc)) from exc
+        raise HTTPException(
+            status_code=409,
+            detail={"code": "PLAN_CHANGED", "message": str(exc)},
+        ) from exc
     except BookingError as exc:
         raise HTTPException(
             status_code=409, detail={"code": exc.code, "message": str(exc)}
