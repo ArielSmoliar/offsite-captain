@@ -1,0 +1,17 @@
+"""Standalone product surface for local review and Cloud Run deployment."""
+
+from pathlib import Path
+
+from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+
+from app.product_api import router
+
+FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
+
+app = FastAPI(
+    title="Offsite Captain",
+    description="Operator-facing offsite coordination and authorization workflow.",
+)
+app.include_router(router)
+app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="product")

@@ -78,6 +78,14 @@ export GOOGLE_CLOUD_LOCATION="global"
 uv run agents-cli playground
 ```
 
+Run the standalone operator interface without invoking Vertex AI:
+
+```bash
+uv run uvicorn app.product_app:app --reload
+```
+
+Then open `http://127.0.0.1:8000/`.
+
 The runtime model defaults to `gemini-3.5-flash`. Override it only when testing
 an intentional model change:
 
@@ -99,15 +107,15 @@ Live ADK tests are deliberately opt-in because they invoke Vertex AI:
 RUN_LIVE_ADK_TESTS=1 uv run pytest tests/integration -q
 ```
 
-Current deterministic baseline: 13 unit tests passing, including authorization,
+Current deterministic baseline: 15 unit tests passing, including authorization,
 expiry, inventory failure, idempotency, and atomic booking behavior.
 
 ## Status
 
-The deterministic coordination and action-boundary core is implemented. The
-next build slices are the product API, the review/approval UI, persistent demo
-state, evaluation cases, and deployment. Deployment and any hackathon submission
-remain explicit human-approved actions.
+The deterministic coordination core, product API, and first review/approval UI
+are implemented. The next build slices are persistent demo state, complete
+exception handling, evaluation cases, and deployment. Deployment and any
+hackathon submission remain explicit human-approved actions.
 
 ## License
 

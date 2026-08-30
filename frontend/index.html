@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Offsite Captain coordinates a validated startup offsite plan with explicit human authorization.">
+    <title>Offsite Captain</title>
+    <link rel="stylesheet" href="/product/styles.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#workspace">Skip to operating plan</a>
+    <header class="topbar">
+      <a class="brand" href="/product/" aria-label="Offsite Captain home">
+        <span class="brand-mark" aria-hidden="true">OC</span>
+        <span>Offsite Captain</span>
+      </a>
+      <p class="demo-label">Simulated planning environment</p>
+    </header>
+
+    <main id="workspace" class="workspace">
+      <section class="page-heading" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">Leadership offsite · New York</p>
+          <h1 id="page-title">One plan for everyone in the room</h1>
+          <p class="lede">October 12–14, 2026 · Six attendees · Five origins</p>
+        </div>
+        <div class="budget" aria-label="Budget status">
+          <span>Plan total</span>
+          <strong>$7,940</strong>
+          <small>$560 under budget</small>
+        </div>
+      </section>
+
+      <nav class="progress" aria-label="Offsite progress">
+        <ol>
+          <li class="complete"><span>1</span>Brief</li>
+          <li class="complete"><span>2</span>Coordinate</li>
+          <li class="current" aria-current="step"><span>3</span>Review</li>
+          <li><span>4</span>Authorize</li>
+          <li><span>5</span>Confirm</li>
+        </ol>
+      </nav>
+
+      <section class="status-band" aria-live="polite">
+        <div>
+          <span class="status-dot" aria-hidden="true"></span>
+          <div>
+            <strong id="status-title">Ready for review</strong>
+            <p id="status-copy">All 11 checks passed. Nothing has been reserved.</p>
+          </div>
+        </div>
+        <button class="text-button" id="show-evidence" type="button" aria-expanded="false" aria-controls="evidence">View validation evidence</button>
+      </section>
+
+      <section id="evidence" class="evidence" hidden>
+        <h2>Why this plan is feasible</h2>
+        <ul>
+          <li>Every traveler has the required arrival buffer.</li>
+          <li>Required attendees and meeting rooms have no conflicts.</li>
+          <li>All preparation work has an owner and deadline.</li>
+          <li>Hotel, room, and activity inventory is available at version 1.</li>
+          <li>The plan is within the approved $8,500 budget.</li>
+        </ul>
+      </section>
+
+      <div class="plan-layout">
+        <section class="agenda" aria-labelledby="agenda-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Operating plan</p>
+              <h2 id="agenda-title">Agenda</h2>
+            </div>
+            <button class="text-button" type="button" disabled title="Editing is part of the next build slice">Edit plan</button>
+          </div>
+
+          <div class="day">
+            <div class="day-heading"><strong>Monday, Oct 12</strong><span>America/New_York</span></div>
+            <article class="session">
+              <time>2:00 PM</time>
+              <div><h3>Product strategy</h3><p>All attendees · Studio 4 · 2 hours</p></div>
+              <span class="check">Ready</span>
+            </article>
+            <article class="session">
+              <time>4:00 PM</time>
+              <div><h3>Fundraising</h3><p>Maya, Ari, Leo · Studio 4 · 1 hour</p></div>
+              <span class="check">Ready</span>
+            </article>
+          </div>
+
+          <div class="day">
+            <div class="day-heading"><strong>Tuesday, Oct 13</strong><span>America/New_York</span></div>
+            <article class="session">
+              <time>9:30 AM</time>
+              <div><h3>Roadmap</h3><p>All attendees · Studio 4 · 2.5 hours</p></div>
+              <span class="check">Ready</span>
+            </article>
+            <article class="session activity">
+              <time>4:30 PM</time>
+              <div><h3>Team cooking</h3><p>All attendees · Cooking Lab · 2 hours</p></div>
+              <span class="check">Ready</span>
+            </article>
+          </div>
+        </section>
+
+        <aside class="commitments" aria-labelledby="commitments-title">
+          <div class="section-heading">
+            <div><p class="eyebrow">Proposed commitments</p><h2 id="commitments-title">What will be reserved</h2></div>
+          </div>
+          <dl class="commitment-list">
+            <div><dt>Harbor Hotel</dt><dd>5 rooms · 2 nights</dd><dd>$5,900</dd></div>
+            <div><dt>Studio 4</dt><dd>2 meeting days</dd><dd>$900</dd></div>
+            <div><dt>Cooking Lab</dt><dd>6 attendees</dd><dd>$1,140</dd></div>
+          </dl>
+          <div class="requirements">
+            <h3>Requirements carried forward</h3>
+            <p>Vegetarian meal for Noa</p>
+            <p>Step-free access for Sam</p>
+          </div>
+          <div class="prep">
+            <h3>Preparation complete</h3>
+            <p>3 documents · 3 owners · Due Oct 9</p>
+          </div>
+        </aside>
+      </div>
+
+      <section class="authorization" id="authorization" aria-labelledby="authorization-title">
+        <div class="authorization-copy">
+          <p class="eyebrow">Human decision required</p>
+          <h2 id="authorization-title">Review the exact commitment</h2>
+          <p>This authorizes three simulated reservations totaling <strong>$7,940</strong>. It does not reserve them yet.</p>
+          <p class="plan-id">Plan <code id="plan-id">loading</code> · Authorization expires after 10 minutes</p>
+        </div>
+        <div class="authorization-action">
+          <label class="consent">
+            <input id="consent" type="checkbox">
+            <span>I reviewed this plan and authorize these simulated reservations.</span>
+          </label>
+          <button class="primary" id="authorize-button" type="button" disabled>Authorize plan</button>
+          <button class="primary" id="reserve-button" type="button" hidden>Create 3 reservations</button>
+          <p class="action-message" id="action-message" role="status"></p>
+        </div>
+      </section>
+
+      <section class="confirmation" id="confirmation" hidden aria-labelledby="confirmation-title">
+        <p class="eyebrow">Operating handoff</p>
+        <h2 id="confirmation-title">3 simulated reservations confirmed</h2>
+        <p>The confirmed plan total is $7,940. Repeating this request will return the same ledger.</p>
+        <div id="confirmation-ledger" class="ledger"></div>
+      </section>
+    </main>
+    <script src="/product/app.js" defer></script>
+  </body>
+</html>

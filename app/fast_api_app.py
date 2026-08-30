@@ -15,11 +15,13 @@ import os
 
 import google.auth
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from google.adk.cli.fast_api import get_fast_api_app
 from google.cloud import logging as google_cloud_logging
 
 from app.app_utils.telemetry import setup_telemetry
 from app.app_utils.typing import Feedback
+from app.product_api import router as product_router
 
 setup_telemetry()
 _, project_id = google.auth.default()
@@ -48,6 +50,8 @@ app: FastAPI = get_fast_api_app(
 )
 app.title = "offsite-captain"
 app.description = "API for interacting with the Agent offsite-captain"
+app.include_router(product_router)
+app.mount("/product", StaticFiles(directory="frontend", html=True), name="product")
 
 
 @app.post("/feedback")
