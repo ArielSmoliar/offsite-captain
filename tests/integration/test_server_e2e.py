@@ -26,6 +26,11 @@ import pytest
 import requests
 from requests.exceptions import RequestException
 
+pytestmark = pytest.mark.skipif(
+    os.getenv("RUN_LIVE_ADK_TESTS") != "1",
+    reason="live Vertex ADK server tests require explicit quota authorization",
+)
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -117,7 +122,13 @@ def test_chat_stream(server_fixture: subprocess.Popen[str]) -> None:
     logger.info("Starting chat stream test")
     # Create session first
     user_id = "test_user_123"
-    session_data = {"state": {"preferred_language": "English", "visit_count": 1}}
+    session_data = {
+        "state": {
+            "offsite_id": "offsite-seed-001",
+            "preferred_language": "English",
+            "visit_count": 1,
+        }
+    }
 
     session_url = f"{BASE_URL}/apps/app/users/{user_id}/sessions"
     session_response = requests.post(
@@ -137,7 +148,7 @@ def test_chat_stream(server_fixture: subprocess.Popen[str]) -> None:
         "session_id": session_id,
         "new_message": {
             "role": "user",
-            "parts": [{"text": "Hi!"}],
+            "parts": [{"text": "Build the authorized seeded offsite plan."}],
         },
         "streaming": True,
     }

@@ -12,12 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+
+import pytest
 from google.adk.agents.run_config import RunConfig, StreamingMode
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types
 
 from app.agent import root_agent
+from app.scenarios import BRIEF
+
+pytestmark = pytest.mark.skipif(
+    os.getenv("RUN_LIVE_ADK_TESTS") != "1",
+    reason="live Vertex ADK tests require explicit quota authorization",
+)
 
 
 def test_agent_stream() -> None:
@@ -28,11 +37,16 @@ def test_agent_stream() -> None:
 
     session_service = InMemorySessionService()
 
-    session = session_service.create_session_sync(user_id="test_user", app_name="test")
+    session = session_service.create_session_sync(
+        user_id="test_user",
+        app_name="test",
+        state={"offsite_id": BRIEF.id},
+    )
     runner = Runner(agent=root_agent, session_service=session_service, app_name="test")
 
     message = types.Content(
-        role="user", parts=[types.Part.from_text(text="Why is the sky blue?")]
+        role="user",
+        parts=[types.Part.from_text(text="Build the authorized seeded offsite plan.")],
     )
 
     events = list(
