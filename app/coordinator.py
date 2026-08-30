@@ -2,12 +2,15 @@
 
 from collections import OrderedDict
 from dataclasses import dataclass
+from datetime import datetime
 from threading import RLock
+from typing import Any
 
-from app.approvals import ApprovalRecord, ApprovalStore
+from app.approvals import ApprovalRecord, ApprovalStatus, ApprovalStore
 from app.booking import BookingEngine
 from app.hashing import canonical_plan_hash, deterministic_id
 from app.models import CandidatePlan, ConfirmationLedger, OffsiteBrief
+from app.persistence import MemoryWorkflowRepository, WorkflowRepository
 from app.scenarios import BRIEF, valid_plan
 from app.validators import validate_plan
 
@@ -24,19 +27,30 @@ class ReviewPacket:
 class OffsiteCoordinator:
     """Backend-owned workflow facade; the ADK agent never receives this object."""
 
-    def __init__(self, plan: CandidatePlan | None = None) -> None:
+    def __init__(
+        self,
+        plan: CandidatePlan | None = None,
+        *,
+        approvals: tuple[ApprovalRecord, ...] = (),
+        ledgers: tuple[ConfirmationLedger, ...] = (),
+        available_by_slot: dict[str, int] | None = None,
+    ) -> None:
         plan = plan or valid_plan()
         if findings := validate_plan(BRIEF, plan):
             codes = ", ".join(sorted({finding.code for finding in findings}))
             raise ValueError(f"coordinator requires a valid plan: {codes}")
         self._plan = plan
-        available_by_slot = {
-            claim.slot_key: claim.quantity
-            for selection in plan.inventory
-            for claim in selection.claims
-        }
-        self._approvals = ApprovalStore()
-        self._booking = BookingEngine(self._approvals, available_by_slot)
+        availability = (
+            available_by_slot
+            if available_by_slot is not None
+            else {
+                claim.slot_key: claim.quantity
+                for selection in plan.inventory
+                for claim in selection.claims
+            }
+        )
+        self._approvals = ApprovalStore(approvals)
+        self._booking = BookingEngine(self._approvals, availability, ledgers)
 
     def review(self) -> ReviewPacket:
         plan = self._plan
@@ -74,14 +88,57 @@ class OffsiteCoordinator:
             request_key=request_key,
         )
 
+    def snapshot(self) -> dict[str, Any]:
+        return {
+            "plan": self._plan.model_dump(mode="json"),
+            "approvals": self._approvals.snapshot(),
+            "booking": self._booking.snapshot(),
+        }
+
+    @classmethod
+    def from_snapshot(cls, snapshot: dict[str, Any]) -> "OffsiteCoordinator":
+        approvals = tuple(
+            ApprovalRecord(
+                id=record["id"],
+                offsite_id=record["offsite_id"],
+                session_hash=record["session_hash"],
+                plan_hash=record["plan_hash"],
+                idempotency_key_hash=record["idempotency_key_hash"],
+                authorized_actions=tuple(record["authorized_actions"]),
+                expires_at=datetime.fromisoformat(record["expires_at"]),
+                status=ApprovalStatus(record["status"]),
+                consumed_at=(
+                    datetime.fromisoformat(record["consumed_at"])
+                    if record["consumed_at"]
+                    else None
+                ),
+            )
+            for record in snapshot["approvals"]
+        )
+        booking = snapshot["booking"]
+        return cls(
+            CandidatePlan.model_validate(snapshot["plan"]),
+            approvals=approvals,
+            ledgers=tuple(
+                ConfirmationLedger.model_validate(ledger)
+                for ledger in booking["ledgers"]
+            ),
+            available_by_slot=booking["available_by_slot"],
+        )
+
 
 class CoordinatorRegistry:
     """Bounded session isolation for local/demo workflow state."""
 
-    def __init__(self, max_sessions: int = 128) -> None:
+    def __init__(
+        self,
+        max_sessions: int = 128,
+        repository: WorkflowRepository | None = None,
+    ) -> None:
         if max_sessions < 1:
             raise ValueError("max_sessions must be positive")
         self._max_sessions = max_sessions
+        self._repository = repository or MemoryWorkflowRepository()
         self._sessions: OrderedDict[str, OffsiteCoordinator] = OrderedDict()
         self._lock = RLock()
 
@@ -91,7 +148,12 @@ class CoordinatorRegistry:
                 self._sessions.move_to_end(session_hash)
                 return coordinator
 
-            coordinator = OffsiteCoordinator()
+            snapshot = self._repository.load(session_hash)
+            coordinator = (
+                OffsiteCoordinator.from_snapshot(snapshot)
+                if snapshot
+                else OffsiteCoordinator()
+            )
             self._sessions[session_hash] = coordinator
             if len(self._sessions) > self._max_sessions:
                 self._sessions.popitem(last=False)
@@ -105,9 +167,17 @@ class CoordinatorRegistry:
         with self._lock:
             self._sessions[session_hash] = coordinator
             self._sessions.move_to_end(session_hash)
+            self._repository.save(session_hash, coordinator.snapshot())
             if len(self._sessions) > self._max_sessions:
                 self._sessions.popitem(last=False)
         return coordinator
+
+    def save(self, session_hash: str) -> None:
+        with self._lock:
+            coordinator = self._sessions.get(session_hash)
+            if coordinator is None:
+                raise KeyError("session is not loaded")
+            self._repository.save(session_hash, coordinator.snapshot())
 
     @property
     def session_count(self) -> int:

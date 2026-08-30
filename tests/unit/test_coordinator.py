@@ -2,6 +2,7 @@ import pytest
 
 from app.booking import AuthorizationRequired
 from app.coordinator import CoordinatorRegistry, OffsiteCoordinator
+from app.persistence import SqliteWorkflowRepository
 
 
 def test_review_packet_is_valid_and_requires_human_authorization() -> None:
@@ -106,3 +107,40 @@ def test_registry_evicts_oldest_session_at_capacity() -> None:
 
     assert registry.session_count == 2
     assert registry.for_session("browser-session-a") is not first
+
+
+def test_sqlite_repository_restores_authorization_and_idempotent_ledger(
+    tmp_path,
+) -> None:
+    repository = SqliteWorkflowRepository(tmp_path / "workflow.db")
+    session_hash = "durable-browser-session"
+    request_key = "durable-reservation-request"
+
+    first_registry = CoordinatorRegistry(repository=repository)
+    first = first_registry.set_plan(session_hash, OffsiteCoordinator().review().plan)
+    packet = first.review()
+    first.authorize(
+        session_hash=session_hash,
+        plan_hash=packet.plan_hash,
+        idempotency_key="durable-approval-key",
+    )
+    first_registry.save(session_hash)
+
+    restarted_registry = CoordinatorRegistry(repository=repository)
+    restarted = restarted_registry.for_session(session_hash)
+    ledger = restarted.reserve(
+        session_hash=session_hash,
+        plan_hash=packet.plan_hash,
+        request_key=request_key,
+    )
+    restarted_registry.save(session_hash)
+
+    second_restart = CoordinatorRegistry(repository=repository)
+    repeated = second_restart.for_session(session_hash).reserve(
+        session_hash=session_hash,
+        plan_hash=packet.plan_hash,
+        request_key=request_key,
+    )
+
+    assert repeated == ledger
+    assert len(repeated.reservations) == 3

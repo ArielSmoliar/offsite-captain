@@ -1,5 +1,6 @@
 """HTTP boundary for the operator-facing Offsite Captain workflow."""
 
+import os
 from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, HTTPException, Query
@@ -9,12 +10,19 @@ from app.booking import BookingError
 from app.coordinator import CoordinatorRegistry, OffsiteCoordinator
 from app.hashing import canonical_plan_hash
 from app.live_planner import coordinate_with_adk
+from app.persistence import MemoryWorkflowRepository, SqliteWorkflowRepository
 from app.scenarios import BRIEF, invalid_plan
 from app.validators import validate_plan
 
 router = APIRouter(prefix="/product/api", tags=["product"])
 coordinator = OffsiteCoordinator()
-coordinators = CoordinatorRegistry()
+state_db = os.getenv("OFFSITE_STATE_DB")
+repository = (
+    SqliteWorkflowRepository(state_db)
+    if state_db
+    else MemoryWorkflowRepository()
+)
+coordinators = CoordinatorRegistry(repository=repository)
 
 
 class StrictRequest(BaseModel):
@@ -106,6 +114,7 @@ def authorize(request: AuthorizationRequest) -> dict[str, Any]:
             status_code=409,
             detail={"code": "PLAN_CHANGED", "message": str(exc)},
         ) from exc
+    coordinators.save(request.session_hash)
     return {
         "id": approval.id,
         "status": approval.status,
@@ -132,4 +141,5 @@ def reserve(request: ReservationRequest) -> dict[str, Any]:
         raise HTTPException(
             status_code=409, detail={"code": exc.code, "message": str(exc)}
         ) from exc
+    coordinators.save(request.session_hash)
     return ledger.model_dump(mode="json")

@@ -84,6 +84,19 @@ Run the standalone operator interface without invoking Vertex AI:
 uv run uvicorn app.product_app:app --reload
 ```
 
+To preserve reviewed plans, approvals, consumed inventory, and confirmation
+ledgers across local process restarts, set a SQLite state path:
+
+```bash
+export OFFSITE_STATE_DB=".local/offsite-captain.db"
+uv run uvicorn app.product_app:app --reload
+```
+
+SQLite is the restart-safe local/demo adapter. Cloud Run must use a shared
+transactional repository such as Firestore through the same `WorkflowRepository`
+boundary; container-local files are intentionally not presented as production
+durability.
+
 Then open `http://127.0.0.1:8000/product/`.
 
 The runtime model defaults to `gemini-3.5-flash`. Override it only when testing
@@ -112,20 +125,21 @@ to booking/approval bypass. The latest run passed response quality, hallucinatio
 the human action boundary, and tool policy at 100%. See
 [`docs/evaluation.md`](docs/evaluation.md) for evidence and reproduction commands.
 
-Current deterministic baseline: 23 unit tests passing, including coordination,
+Current deterministic baseline: 24 unit tests passing, including coordination,
 validation, authorization, expiry, inventory failure, idempotency, and atomic
-booking behavior. The operator UI maps authorization expiry, stale plans,
+booking behavior across a process restart. The operator UI maps authorization expiry, stale plans,
 inventory changes, and network interruptions to distinct, safe recovery paths.
 
 ## Status
 
 The deterministic coordination core, live Gemini/ADK path, evaluated action
 boundary, session-isolated product API, and review/approval UI are implemented.
-The confirmation state now provides an operating handoff with exact simulated
+The confirmation state provides an operating handoff with exact simulated
 confirmation IDs, preparation owners, a decision trail, a copyable summary, and
-the preserved authorization record. The next build slices are durable
-persistence and deployment readiness. Deployment and any hackathon submission
-remain explicit human-approved actions.
+the preserved authorization record. A transactional SQLite repository now makes
+the local workflow restart-safe; the next build slices are the production
+Firestore adapter and deployment readiness. Deployment and any hackathon
+submission remain explicit human-approved actions.
 
 ## License
 

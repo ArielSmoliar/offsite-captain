@@ -32,8 +32,26 @@ class ApprovalRecord:
 class ApprovalStore:
     """In-memory reference semantics mirrored by the Firestore repository."""
 
-    def __init__(self) -> None:
-        self._records: dict[str, ApprovalRecord] = {}
+    def __init__(self, records: tuple[ApprovalRecord, ...] = ()) -> None:
+        self._records = {record.id: record for record in records}
+
+    def snapshot(self) -> list[dict[str, object]]:
+        return [
+            {
+                "id": record.id,
+                "offsite_id": record.offsite_id,
+                "session_hash": record.session_hash,
+                "plan_hash": record.plan_hash,
+                "idempotency_key_hash": record.idempotency_key_hash,
+                "authorized_actions": list(record.authorized_actions),
+                "expires_at": record.expires_at.isoformat(),
+                "status": record.status.value,
+                "consumed_at": (
+                    record.consumed_at.isoformat() if record.consumed_at else None
+                ),
+            }
+            for record in self._records.values()
+        ]
 
     def authorize(
         self,

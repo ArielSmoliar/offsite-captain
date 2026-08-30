@@ -26,11 +26,19 @@ class InventoryUnavailable(BookingError):
 
 class BookingEngine:
     def __init__(
-        self, approvals: ApprovalStore, available_by_slot: dict[str, int]
+        self,
+        approvals: ApprovalStore,
+        available_by_slot: dict[str, int],
+        ledgers: tuple[ConfirmationLedger, ...] = (),
     ) -> None:
         self._approvals = approvals
         self._available_by_slot = available_by_slot.copy()
-        self._ledgers: dict[str, ConfirmationLedger] = {}
+        self._ledgers = {
+            deterministic_id(
+                ledger.offsite_id, ledger.plan_hash, ledger.request_key
+            ): ledger
+            for ledger in ledgers
+        }
         self._lock = RLock()
 
     def book(
@@ -97,3 +105,13 @@ class BookingEngine:
             approval.status = ApprovalStatus.CONSUMED
             approval.consumed_at = timestamp
             return ledger
+
+    def snapshot(self) -> dict[str, object]:
+        with self._lock:
+            return {
+                "available_by_slot": self._available_by_slot.copy(),
+                "ledgers": [
+                    ledger.model_dump(mode="json")
+                    for ledger in self._ledgers.values()
+                ],
+            }
