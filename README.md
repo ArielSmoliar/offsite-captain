@@ -6,7 +6,7 @@ inventory, and activity options into one feasible plan—then pauses at a clear
 human authorization boundary before creating simulated reservations.
 
 The project is being built for the All Things Agentic Hackathon with Gemini on
-Vertex AI, Google Agent Development Kit (ADK), and Google Cloud. Development and
+Vertex AI, Google ADK, and Google Cloud. Development and
 review are performed in Codex; Gemini is the product's runtime reasoning model.
 
 **Hosted demo:** https://offsite-captain-pgg2be7x2a-ue.a.run.app/product/
