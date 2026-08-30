@@ -9,6 +9,8 @@ The project is being built for the All Things Agentic Hackathon with Gemini on
 Vertex AI, Google Agent Development Kit (ADK), and Google Cloud. Development and
 review are performed in Codex; Gemini is the product's runtime reasoning model.
 
+**Hosted demo:** https://offsite-captain-pgg2be7x2a-ue.a.run.app/product/
+
 ## Product walkthrough
 
 1. **Brief** — collect the city, dates, budget, attendees, travel origins,
@@ -108,11 +110,78 @@ OFFSITE_STATE_COLLECTION=offsite_workflows
 ```
 
 The runtime service account uses application-default credentials and needs
-`roles/datastore.user`; no service-account key is stored in the application.
+`roles/datastore.user`, `roles/aiplatform.user`, `roles/logging.logWriter`,
+`roles/monitoring.metricWriter`, and `roles/cloudtrace.agent`; no service-account
+key is stored in the application.
 The current snapshot adapter requires one Cloud Run instance to preserve the
 same serialized booking semantics as the in-process lock. Deploy with
 `--max-instances 1 --concurrency 8` until Firestore compare-and-swap transactions
-are implemented. Health probes are available at `/healthz` and `/readyz`.
+are implemented. The hosted health probes are available at `/health` and
+`/readyz`.
+
+The verified production deployment uses project `offsite-captain-2026` and
+region `us-east1`. From an authenticated shell, create or select a billed Google
+Cloud project, enable the required services, create a Firestore Native database,
+and deploy the exact container entrypoint:
+
+```bash
+export GOOGLE_CLOUD_PROJECT="your-project-id"
+export GOOGLE_CLOUD_REGION="us-east1"
+
+gcloud services enable \
+  run.googleapis.com \
+  firestore.googleapis.com \
+  aiplatform.googleapis.com \
+  artifactregistry.googleapis.com \
+  cloudbuild.googleapis.com \
+  --project="$GOOGLE_CLOUD_PROJECT"
+
+gcloud firestore databases create \
+  --database="(default)" \
+  --location="$GOOGLE_CLOUD_REGION" \
+  --type=firestore-native \
+  --project="$GOOGLE_CLOUD_PROJECT"
+
+gcloud iam service-accounts create offsite-captain-runtime \
+  --display-name="Offsite Captain Cloud Run runtime" \
+  --project="$GOOGLE_CLOUD_PROJECT"
+
+gcloud artifacts repositories create cloud-run-source-deploy \
+  --repository-format=docker \
+  --location="$GOOGLE_CLOUD_REGION" \
+  --description="Cloud Run source builds for Offsite Captain" \
+  --project="$GOOGLE_CLOUD_PROJECT"
+
+for role in \
+  roles/datastore.user \
+  roles/aiplatform.user \
+  roles/logging.logWriter \
+  roles/monitoring.metricWriter \
+  roles/cloudtrace.agent; do
+  gcloud projects add-iam-policy-binding "$GOOGLE_CLOUD_PROJECT" \
+    --member="serviceAccount:offsite-captain-runtime@$GOOGLE_CLOUD_PROJECT.iam.gserviceaccount.com" \
+    --role="$role" \
+    --condition=None
+done
+
+gcloud run deploy offsite-captain \
+  --source=. \
+  --project="$GOOGLE_CLOUD_PROJECT" \
+  --region="$GOOGLE_CLOUD_REGION" \
+  --service-account="offsite-captain-runtime@$GOOGLE_CLOUD_PROJECT.iam.gserviceaccount.com" \
+  --allow-unauthenticated \
+  --set-env-vars="OFFSITE_STATE_BACKEND=firestore,GOOGLE_CLOUD_PROJECT=$GOOGLE_CLOUD_PROJECT,GOOGLE_CLOUD_LOCATION=global,GOOGLE_GENAI_USE_VERTEXAI=True,OFFSITE_STATE_COLLECTION=offsite_workflows" \
+  --min-instances=0 \
+  --max-instances=1 \
+  --concurrency=8 \
+  --cpu=1 \
+  --memory=1Gi \
+  --timeout=300
+```
+
+If the default Firestore database already exists, skip its creation command.
+Verify the deployed service with `GET /health`, `GET /readyz`, and the complete
+operator flow at `/product/`.
 
 Then open `http://127.0.0.1:8000/product/`.
 
@@ -151,6 +220,16 @@ product route, health probes, and reservation contract have a local smoke test.
 The final Impeccable UI pass scores 20/20 after resolving the full accessibility,
 responsive, interaction, typography, and design-system audit.
 
+## Submission materials
+
+- [`docs/demo-script.md`](docs/demo-script.md) — timed sub-four-minute recording
+  script and public-video checklist.
+- [`docs/devpost-submission.md`](docs/devpost-submission.md) — prepared Devpost
+  write-up, custom answers, judge instructions, and remaining submission gates.
+- [`diagrams/offsite-captain-architecture.png`](diagrams/offsite-captain-architecture.png)
+  — upload-ready architecture diagram, with Mermaid, SVG, and editable
+  Excalidraw sources in the same directory.
+
 ## Status
 
 The deterministic coordination core, live Gemini/ADK path, evaluated action
@@ -158,10 +237,9 @@ boundary, session-isolated product API, and review/approval UI are implemented.
 The confirmation state provides an operating handoff with exact simulated
 confirmation IDs, preparation owners, a decision trail, a copyable summary, and
 the preserved authorization record. Transactional SQLite makes the local
-workflow restart-safe, and the production configuration can use Firestore with
-the Cloud Run runtime identity. Remaining work is single-instance hosted
-verification. Deployment and any hackathon submission remain
-explicit human-approved actions.
+workflow restart-safe, and the production deployment uses Firestore with the
+Cloud Run runtime identity. Single-instance hosted verification is complete.
+Hackathon submission remains an explicit human-approved action.
 
 ## License
 

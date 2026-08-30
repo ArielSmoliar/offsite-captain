@@ -1,0 +1,12 @@
+graph TD
+    A[Startup operations lead] -->|Brief and constraints| B[Cloud Run API and run-sheet UI]
+    B -->|Planning request| C[Gemini 3.5 Flash on Vertex AI]
+    C -->|Bounded tools| D[Google ADK read, search, validate, propose]
+    D --> E[Candidate offsite plan]
+    E --> F[Deterministic validators]
+    F -->|Cited conflicts| C
+    F -->|Feasible plan and canonical hash| G[Human review and exact authorization]
+    G -->|Session, scope, cost, expiry| H[Atomic simulated booking engine]
+    H -->|Idempotent ledger| I[Confirmation handoff]
+    B <--> J[(Firestore workflow state)]
+    H <--> J
