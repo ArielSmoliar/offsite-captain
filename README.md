@@ -148,6 +148,8 @@ booking behavior across a process restart. The operator UI maps authorization
 expiry, stale plans, inventory changes, and network interruptions to distinct,
 safe recovery paths. The Cloud Run image builds successfully and its packaged
 product route, health probes, and reservation contract have a local smoke test.
+The latest Impeccable hardening pass scores 18/20 after resolving every P1
+accessibility and semantic-state finding.
 
 ## Status
 

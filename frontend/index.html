@@ -57,20 +57,22 @@
         </dl>
       </section>
 
-      <section class="coordination" id="coordination" hidden aria-labelledby="coordination-title">
+      <section class="coordination" id="coordination" hidden aria-labelledby="coordination-title" aria-busy="false">
         <p class="eyebrow">Coordination trace</p>
         <h2 id="coordination-title">Building one feasible plan</h2>
         <ol class="trace" aria-live="polite">
-          <li data-trace="0"><span></span>Read six traveler constraints</li>
-          <li data-trace="1"><span></span>Compare hotel, room, and activity inventory</li>
-          <li data-trace="2"><span></span>Draft agenda and preparation assignments</li>
-          <li data-trace="3"><span></span>Run deterministic feasibility checks</li>
+          <li data-trace="0"><span class="trace-marker" aria-hidden="true"></span><span class="trace-label">Read six traveler constraints</span><span class="trace-state">Waiting</span></li>
+          <li data-trace="1"><span class="trace-marker" aria-hidden="true"></span><span class="trace-label">Compare hotel, room, and activity inventory</span><span class="trace-state">Waiting</span></li>
+          <li data-trace="2"><span class="trace-marker" aria-hidden="true"></span><span class="trace-label">Draft agenda and preparation assignments</span><span class="trace-state">Waiting</span></li>
+          <li data-trace="3"><span class="trace-marker" aria-hidden="true"></span><span class="trace-label">Run deterministic feasibility checks</span><span class="trace-state">Waiting</span></li>
         </ol>
+        <p class="coordination-error" id="coordination-error" role="alert" hidden></p>
+        <button class="secondary" id="coordination-retry" type="button" hidden>Try coordination again</button>
       </section>
 
       <section class="issues" id="issues" hidden aria-labelledby="issues-title">
         <div class="issues-heading">
-          <div><p class="eyebrow">Needs attention</p><h2 id="issues-title">Three conflicts block this draft</h2></div>
+          <div><p class="eyebrow">Needs attention</p><h2 id="issues-title" tabindex="-1">Three conflicts block this draft</h2></div>
           <span>Nothing has been reserved</span>
         </div>
         <p class="trace-mode" id="trace-mode"></p>
@@ -174,6 +176,7 @@
           <button class="secondary" id="copy-summary-button" type="button">Copy confirmation summary</button>
           <button class="text-button" id="authorization-record-button" type="button" aria-expanded="false" aria-controls="authorization-record">View authorization record</button>
         </div>
+        <p class="action-message" id="handoff-message" role="status"></p>
         <dl class="authorization-record" id="authorization-record" hidden>
           <div><dt>Plan</dt><dd><code id="record-plan-id"></code></dd></div>
           <div><dt>Approval</dt><dd><code id="record-approval-id"></code></dd></div>

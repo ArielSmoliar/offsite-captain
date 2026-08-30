@@ -5,6 +5,17 @@ Surface: `frontend/index.html`, `frontend/app.js`, `frontend/styles.css`
 Method: Impeccable product-register audit plus direct semantic, token,
 interaction, responsive, and contrast inspection.
 
+## Remediation update
+
+The P1 hardening pass is complete. Coordination now has an in-context retry,
+progress exposes textual states with `aria-busy`, focus moves to the revealed
+issues heading, and the shared status band distinguishes success, information,
+and recoverable warning states. Copy feedback also uses a dedicated live region.
+
+Revised score: **18/20 (Excellent, minor polish)**. Remaining findings are the
+P2 edit-plan decision, touch-target sizing, and truthful progressive timing,
+plus the P3 product-heading and design-system documentation work.
+
 The Impeccable CLI package installation stalled and was terminated without
 changing the repository. The findings below are based on verified source and
 computed contrast values.

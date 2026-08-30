@@ -10,6 +10,10 @@
   --accent-soft: oklch(94% 0.03 55);
   --success: oklch(45% 0.09 151);
   --success-soft: oklch(95% 0.025 151);
+  --info: oklch(43% 0.08 245);
+  --info-soft: oklch(95% 0.025 245);
+  --warning: oklch(42% 0.085 72);
+  --warning-soft: oklch(95% 0.03 78);
   --focus: oklch(55% 0.16 252);
   --shadow: 0 18px 50px oklch(30% 0.02 70 / 0.09);
   font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -45,10 +49,12 @@ h3 { margin-bottom: .3rem; font-size: .98rem; }
 .progress li.complete span { background: var(--success-soft); border-color: var(--success); }
 .progress li.current { color: var(--ink); border-color: var(--accent); }
 .progress li.current span { background: var(--accent); border-color: var(--accent); color: var(--surface); }
-.status-band { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; padding: 1.2rem 1.35rem; background: var(--success-soft); border: 1px solid oklch(83% 0.05 151); border-radius: .75rem; }
+.status-band { --status-color: var(--success); --status-soft: var(--success-soft); --status-border: oklch(83% 0.05 151); --status-ink: oklch(34% 0.06 151); display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; padding: 1.2rem 1.35rem; background: var(--status-soft); border: 1px solid var(--status-border); border-radius: .75rem; }
+.status-band[data-status="info"] { --status-color: var(--info); --status-soft: var(--info-soft); --status-border: oklch(82% 0.045 245); --status-ink: oklch(34% 0.06 245); }
+.status-band[data-status="warning"] { --status-color: var(--warning); --status-soft: var(--warning-soft); --status-border: oklch(82% 0.05 78); --status-ink: oklch(34% 0.065 72); }
 .status-band > div { display: flex; align-items: center; gap: .85rem; }
-.status-band p { margin: .2rem 0 0; color: var(--muted); font-size: .87rem; }
-.status-dot { width: .7rem; height: .7rem; flex: 0 0 auto; border-radius: 50%; background: var(--success); }
+.status-band p { margin: .2rem 0 0; color: var(--status-ink); font-size: .87rem; }
+.status-dot { width: .7rem; height: .7rem; flex: 0 0 auto; border-radius: 50%; background: var(--status-color); }
 .text-button { padding: .35rem 0; border: 0; background: transparent; color: var(--accent); font-weight: 700; cursor: pointer; }
 .text-button:disabled { color: var(--muted); cursor: not-allowed; }
 .brief-panel { display: grid; grid-template-columns: 1.15fr .85fr; gap: 4rem; margin-top: 3.75rem; padding: 2.5rem 0; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--line); }
@@ -61,12 +67,15 @@ h3 { margin-bottom: .3rem; font-size: .98rem; }
 .coordination { max-width: 48rem; margin: 3.75rem auto 0; }
 .coordination > h2 { margin-bottom: 1.5rem; }
 .trace { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--ink); }
-.trace li { display: flex; align-items: center; gap: .8rem; padding: 1rem 0; border-bottom: 1px solid var(--line); color: var(--muted); }
-.trace li span { width: .8rem; height: .8rem; border: 1px solid var(--line); border-radius: 50%; background: var(--surface); }
+.trace li { display: grid; grid-template-columns: .8rem 1fr auto; align-items: center; gap: .8rem; padding: 1rem 0; border-bottom: 1px solid var(--line); color: var(--muted); }
+.trace-marker { width: .8rem; height: .8rem; border: 1px solid var(--line); border-radius: 50%; background: var(--surface); }
+.trace-state { font-size: .72rem; font-weight: 700; }
 .trace li.active { color: var(--ink); font-weight: 680; }
-.trace li.active span { border-color: var(--accent); background: var(--accent-soft); }
+.trace li.active .trace-marker { border-color: var(--accent); background: var(--accent-soft); }
 .trace li.complete { color: var(--success); }
-.trace li.complete span { border-color: var(--success); background: var(--success); }
+.trace li.complete .trace-marker { border-color: var(--success); background: var(--success); }
+.coordination-error { margin: 1rem 0 0; color: var(--warning); line-height: 1.5; }
+.coordination .secondary { min-width: 13rem; }
 .issues { margin-top: 3.75rem; }
 .issues-heading { display: flex; justify-content: space-between; align-items: end; padding-bottom: 1rem; border-bottom: 1px solid var(--ink); }
 .issues-heading > span { color: var(--muted); font-size: .78rem; }

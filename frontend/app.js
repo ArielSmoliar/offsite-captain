@@ -17,6 +17,10 @@ const actionMessage = document.querySelector("#action-message");
 const statusTitle = document.querySelector("#status-title");
 const statusCopy = document.querySelector("#status-copy");
 const progressItems = [...document.querySelectorAll(".progress li")];
+const coordinateButton = document.querySelector("#coordinate-button");
+const coordination = document.querySelector("#coordination");
+const coordinationRetry = document.querySelector("#coordination-retry");
+const coordinationError = document.querySelector("#coordination-error");
 
 async function request(path, options = {}) {
   let response;
@@ -66,21 +70,18 @@ function resetAuthorization() {
 function handleReservationFailure(error) {
   if (error.code === "AUTHORIZATION_EXPIRED" || error.code === "AUTHORIZATION_REQUIRED") {
     resetAuthorization();
-    statusTitle.textContent = "Authorization required";
-    statusCopy.textContent = "The reviewed plan is preserved. Authorize it again to continue.";
+    setStatus("warning", "Authorization required", "The reviewed plan is preserved. Authorize it again to continue.");
     actionMessage.textContent = "No reservation was created.";
     return;
   }
   if (error.code === "INVENTORY_UNAVAILABLE" || error.code === "PLAN_CHANGED") {
-    statusTitle.textContent = "Plan needs review";
-    statusCopy.textContent = "Availability or the exact plan changed. Nothing was partially reserved.";
+    setStatus("warning", "Plan needs review", "Availability or the exact plan changed. Nothing was partially reserved.");
     actionMessage.textContent = error.message;
     showRecovery("Refresh plan", () => window.location.reload());
     return;
   }
   if (error.code === "NETWORK_INTERRUPTION") {
-    statusTitle.textContent = "Reservation status unknown";
-    statusCopy.textContent = "Keep this request open; retrying safely checks the same reservation request.";
+    setStatus("warning", "Reservation status unknown", "Keep this request open; retrying safely checks the same reservation request.");
     actionMessage.textContent = "The connection was interrupted. Do not start a new plan.";
     showRecovery("Check reservation status", () => reserveButton.click());
     return;
@@ -100,6 +101,12 @@ function setStep(index) {
     if (itemIndex === index) item.setAttribute("aria-current", "step");
     else item.removeAttribute("aria-current");
   });
+}
+
+function setStatus(kind, title, copy) {
+  document.querySelector("#review-status").dataset.status = kind;
+  statusTitle.textContent = title;
+  statusCopy.textContent = copy;
 }
 
 function titleCase(value) {
@@ -233,10 +240,22 @@ function renderReview(review) {
   document.querySelector("#preparation-summary").textContent = `${review.plan.preparation.length} documents · ${owners.size} owners · Due Oct 9`;
 }
 
-document.querySelector("#coordinate-button").addEventListener("click", async (event) => {
-  setBusy(event.currentTarget, true, "Coordinating…", "Coordinate offsite");
+async function coordinateOffsite(trigger) {
+  const idleLabel = trigger === coordinateButton ? "Coordinate offsite" : "Try coordination again";
+  setBusy(trigger, true, "Coordinating…", idleLabel);
   document.querySelector("#brief-panel").hidden = true;
-  document.querySelector("#coordination").hidden = false;
+  coordination.hidden = false;
+  coordination.setAttribute("aria-busy", "true");
+  coordinationRetry.hidden = true;
+  coordinationError.hidden = true;
+  document.querySelector("#coordination-title").textContent = "Building one feasible plan";
+  const traceItems = [...document.querySelectorAll("[data-trace]")];
+  traceItems.forEach((item) => {
+    item.classList.remove("active", "complete");
+    item.querySelector(".trace-state").textContent = "Waiting";
+  });
+  traceItems[0].classList.add("active");
+  traceItems[0].querySelector(".trace-state").textContent = "In progress";
   setStep(1);
   try {
     const result = await request("/product/api/coordinate?mode=live", {
@@ -248,16 +267,18 @@ document.querySelector("#coordinate-button").addEventListener("click", async (ev
     state.coordinatedAt = new Date().toISOString();
     document.querySelector("#plan-id").textContent = state.review.plan_hash.slice(0, 12);
     renderReview(state.review);
-    const traceItems = [...document.querySelectorAll("[data-trace]")];
     const shortMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const delay = shortMotion ? 20 : 360;
     for (const item of traceItems) {
       item.classList.add("active");
+      item.querySelector(".trace-state").textContent = "In progress";
       await new Promise((resolve) => window.setTimeout(resolve, delay));
       item.classList.remove("active");
       item.classList.add("complete");
+      item.querySelector(".trace-state").textContent = "Complete";
     }
-    document.querySelector("#coordination").hidden = true;
+    coordination.setAttribute("aria-busy", "false");
+    coordination.hidden = true;
     document.querySelector("#issues").hidden = false;
     const traceMode = document.querySelector("#trace-mode");
     if (result.agent_mode === "gemini_adk") {
@@ -267,12 +288,18 @@ document.querySelector("#coordinate-button").addEventListener("click", async (ev
     }
     document.querySelector("#issues-title").focus?.();
   } catch (error) {
+    coordination.setAttribute("aria-busy", "false");
     document.querySelector("#coordination-title").textContent = "Coordination paused";
-    const message = document.createElement("p");
-    message.textContent = `${error.message} Nothing has been reserved.`;
-    document.querySelector("#coordination").append(message);
+    coordinationError.textContent = `${error.message} Nothing has been reserved.`;
+    coordinationError.hidden = false;
+    coordinationRetry.hidden = false;
+    setBusy(trigger, false, "Coordinating…", idleLabel);
+    coordinationRetry.focus();
   }
-});
+}
+
+coordinateButton.addEventListener("click", () => coordinateOffsite(coordinateButton));
+coordinationRetry.addEventListener("click", () => coordinateOffsite(coordinationRetry));
 
 document.querySelector("#apply-fixes").addEventListener("click", () => {
   state.validatedAt = new Date().toISOString();
@@ -312,8 +339,7 @@ authorizeButton.addEventListener("click", async () => {
     });
     state.approval = { ...approval, authorized_at: new Date().toISOString() };
     const expires = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(new Date(approval.expires_at));
-    statusTitle.textContent = `Authorized until ${expires}`;
-    statusCopy.textContent = "The exact reviewed plan may now create three simulated reservations.";
+    setStatus("info", `Authorized until ${expires}`, "The exact reviewed plan may now create three simulated reservations.");
     actionMessage.textContent = "Authorization recorded. No reservation exists yet.";
     authorizeButton.hidden = true;
     consent.parentElement.hidden = true;
@@ -350,8 +376,7 @@ reserveButton.addEventListener("click", async () => {
       article.append(name, confirmation);
       return article;
     }));
-    statusTitle.textContent = "Confirmed";
-    statusCopy.textContent = "Three simulated reservations were created atomically.";
+    setStatus("success", "Confirmed", "Three simulated reservations were created atomically.");
     actionMessage.textContent = "Already completed requests safely return this same ledger.";
     document.querySelector("#confirmation").hidden = false;
     renderHandoff(ledger);
@@ -369,12 +394,16 @@ document.querySelector("#open-plan-button").addEventListener("click", () => {
 });
 
 document.querySelector("#copy-summary-button").addEventListener("click", async (event) => {
+  const handoffMessage = document.querySelector("#handoff-message");
   try {
     await navigator.clipboard.writeText(confirmationSummary());
     event.currentTarget.textContent = "Summary copied";
+    handoffMessage.textContent = "Confirmation summary copied to the clipboard.";
   } catch {
     event.currentTarget.textContent = "Copy unavailable";
+    handoffMessage.textContent = "The browser could not access the clipboard. The confirmation details remain visible above.";
   }
+  window.setTimeout(() => { event.currentTarget.textContent = "Copy confirmation summary"; }, 2000);
 });
 
 document.querySelector("#authorization-record-button").addEventListener("click", (event) => {
