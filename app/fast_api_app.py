@@ -11,12 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import logging
 import os
 
 import google.auth
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from google.adk.cli.fast_api import get_fast_api_app
+from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import logging as google_cloud_logging
 
 from app.app_utils.telemetry import setup_telemetry
@@ -24,9 +26,16 @@ from app.app_utils.typing import Feedback
 from app.product_api import router as product_router
 
 setup_telemetry()
-_, project_id = google.auth.default()
-logging_client = google_cloud_logging.Client()
-logger = logging_client.logger(__name__)
+logger = logging.getLogger(__name__)
+cloud_logger = None
+cloud_credentials_available = False
+try:
+    google.auth.default()
+    cloud_credentials_available = True
+    logging_client = google_cloud_logging.Client()
+    cloud_logger = logging_client.logger(__name__)
+except DefaultCredentialsError:
+    logger.info("Cloud credentials unavailable; using standard logging")
 allow_origins = (
     os.getenv("ALLOW_ORIGINS", "").split(",") if os.getenv("ALLOW_ORIGINS") else None
 )
@@ -46,7 +55,7 @@ app: FastAPI = get_fast_api_app(
     artifact_service_uri=artifact_service_uri,
     allow_origins=allow_origins,
     session_service_uri=session_service_uri,
-    otel_to_cloud=True,
+    otel_to_cloud=cloud_credentials_available,
 )
 app.title = "offsite-captain"
 app.description = "API for interacting with the Agent offsite-captain"
@@ -74,7 +83,10 @@ def collect_feedback(feedback: Feedback) -> dict[str, str]:
     Returns:
         Success message
     """
-    logger.log_struct(feedback.model_dump(), severity="INFO")
+    if cloud_logger is not None:
+        cloud_logger.log_struct(feedback.model_dump(), severity="INFO")
+    else:
+        logger.info("feedback=%s", feedback.model_dump())
     return {"status": "success"}
 
 

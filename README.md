@@ -88,6 +88,7 @@ To preserve reviewed plans, approvals, consumed inventory, and confirmation
 ledgers across local process restarts, set a SQLite state path:
 
 ```bash
+export OFFSITE_STATE_BACKEND="sqlite"
 export OFFSITE_STATE_DB=".local/offsite-captain.db"
 uv run uvicorn app.product_app:app --reload
 ```
@@ -143,8 +144,10 @@ the human action boundary, and tool policy at 100%. See
 
 Current deterministic baseline: 28 unit tests passing, including coordination,
 validation, authorization, expiry, inventory failure, idempotency, and atomic
-booking behavior across a process restart. The operator UI maps authorization expiry, stale plans,
-inventory changes, and network interruptions to distinct, safe recovery paths.
+booking behavior across a process restart. The operator UI maps authorization
+expiry, stale plans, inventory changes, and network interruptions to distinct,
+safe recovery paths. The Cloud Run image builds successfully and its packaged
+product route, health probes, and reservation contract have a local smoke test.
 
 ## Status
 
@@ -154,9 +157,9 @@ The confirmation state provides an operating handoff with exact simulated
 confirmation IDs, preparation owners, a decision trail, a copyable summary, and
 the preserved authorization record. Transactional SQLite makes the local
 workflow restart-safe, and the production configuration can use Firestore with
-the Cloud Run runtime identity. Remaining work is container execution,
-single-instance hosted verification, and final polish. Deployment and any
-hackathon submission remain explicit human-approved actions.
+the Cloud Run runtime identity. Remaining work is single-instance hosted
+verification and final polish. Deployment and any hackathon submission remain
+explicit human-approved actions.
 
 ## License
 
