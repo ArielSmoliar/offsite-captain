@@ -12,6 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .agent import app
+from typing import Any
 
 __all__ = ["app"]
+
+
+def __getattr__(name: str) -> Any:
+    """Load the ADK application only when a runner requests it."""
+    if name == "app":
+        from .agent import app
+
+        return app
+    raise AttributeError(name)

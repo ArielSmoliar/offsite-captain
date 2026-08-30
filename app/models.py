@@ -57,6 +57,11 @@ class PreparationTask(StrictModel):
     due_at: datetime
 
 
+class AvailabilityClaim(StrictModel):
+    slot_key: str
+    quantity: int = Field(gt=0)
+
+
 class InventorySelection(StrictModel):
     inventory_id: str
     kind: InventoryKind
@@ -66,7 +71,7 @@ class InventorySelection(StrictModel):
     ends_at: datetime
     definition_version: int = Field(gt=0)
     availability_version: int = Field(gt=0)
-    slot_keys: tuple[str, ...]
+    claims: tuple[AvailabilityClaim, ...]
 
     @property
     def subtotal_cents(self) -> int:
@@ -99,3 +104,22 @@ class ValidationFinding(StrictModel):
     code: str
     message: str
     entity_id: str
+
+
+class Reservation(StrictModel):
+    id: str
+    offsite_id: str
+    plan_hash: str
+    request_key: str
+    inventory_id: str
+    quantity: int
+    cost_cents: int
+    confirmation_id: str
+
+
+class ConfirmationLedger(StrictModel):
+    offsite_id: str
+    plan_hash: str
+    request_key: str
+    total_cost_cents: int
+    reservations: tuple[Reservation, ...]

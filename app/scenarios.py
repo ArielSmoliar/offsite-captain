@@ -5,6 +5,7 @@ from zoneinfo import ZoneInfo
 
 from app.models import (
     Attendee,
+    AvailabilityClaim,
     CandidatePlan,
     InventoryKind,
     InventorySelection,
@@ -97,9 +98,9 @@ def inventory() -> tuple[InventorySelection, ...]:
             ends_at=at(14, 11),
             definition_version=1,
             availability_version=1,
-            slot_keys=(
-                "hotel:harbor-hotel:2026-10-12",
-                "hotel:harbor-hotel:2026-10-13",
+            claims=(
+                AvailabilityClaim(slot_key="hotel:harbor-hotel:2026-10-12", quantity=5),
+                AvailabilityClaim(slot_key="hotel:harbor-hotel:2026-10-13", quantity=5),
             ),
         ),
         InventorySelection(
@@ -111,7 +112,10 @@ def inventory() -> tuple[InventorySelection, ...]:
             ends_at=at(13, 18),
             definition_version=1,
             availability_version=1,
-            slot_keys=("room:studio-4:2026-10-12", "room:studio-4:2026-10-13"),
+            claims=(
+                AvailabilityClaim(slot_key="room:studio-4:2026-10-12", quantity=1),
+                AvailabilityClaim(slot_key="room:studio-4:2026-10-13", quantity=1),
+            ),
         ),
         InventorySelection(
             inventory_id="cooking-lab",
@@ -122,7 +126,12 @@ def inventory() -> tuple[InventorySelection, ...]:
             ends_at=at(13, 18, 30),
             definition_version=1,
             availability_version=1,
-            slot_keys=("activity:cooking-lab:2026-10-13T16:30-04:00",),
+            claims=(
+                AvailabilityClaim(
+                    slot_key="activity:cooking-lab:2026-10-13T16:30-04:00",
+                    quantity=6,
+                ),
+            ),
         ),
     )
 
