@@ -90,7 +90,9 @@ root_agent = Agent(
     ],
     generate_content_config=types.GenerateContentConfig(
         temperature=0,
-        max_output_tokens=4096,
+        # The complete seeded plan plus three inventory tool responses can
+        # exceed 4K tokens before Gemini reaches submit_candidate.
+        max_output_tokens=8192,
     ),
 )
 

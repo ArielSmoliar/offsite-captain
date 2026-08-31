@@ -222,6 +222,9 @@ responsive, interaction, typography, and design-system audit.
 
 ## Submission materials
 
+- [Public 1:31 narrated demo](https://youtu.be/TrWWCVCx-yI) — live
+  Gemini 3.5 Flash and Google ADK coordination through human-authorized,
+  simulated reservations.
 - [`docs/demo-script.md`](docs/demo-script.md) — timed sub-four-minute recording
   script and public-video checklist.
 - [`docs/devpost-submission.md`](docs/devpost-submission.md) — prepared Devpost

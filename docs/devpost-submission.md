@@ -14,7 +14,7 @@ explicit approval.
 - **Hosted project:** https://offsite-captain-pgg2be7x2a-ue.a.run.app/product/
 - **Built with:** Gemini 3.5 Flash, Vertex AI, Google ADK, Cloud Run, Firestore,
   FastAPI, Pydantic, Python, JavaScript
-- **Video URL:** Pending public YouTube or Vimeo upload
+- **Video URL:** https://youtu.be/TrWWCVCx-yI
 - **Architecture upload:** `diagrams/offsite-captain-architecture.png`
 
 ## Short description
@@ -131,7 +131,7 @@ configured.
 ## Required custom answers
 
 - **Submitter Type:** Individuals
-- **Submitter country of residence:** Confirm before submission
+- **Submitter country of residence:** United States
 - **Category:** Taskmaster
 - **Organization name:** Not applicable; use `N/A` if the required field does
   not accept an empty answer
@@ -163,9 +163,7 @@ authorization, or simulated reservation creation.
 
 ## Final submission gates
 
-- Replace the pending video URL with a public YouTube or Vimeo link under four
-  minutes and verify it in an incognito window.
-- Confirm country of residence and whether the organization field accepts `N/A`.
+- Confirm the organization field accepts `N/A`.
 - Upload `diagrams/offsite-captain-architecture.png` to the architecture field.
 - Confirm the public hosted URL, repository, and video all load anonymously.
 - Do not add a repository license without the entrant's separate explicit
