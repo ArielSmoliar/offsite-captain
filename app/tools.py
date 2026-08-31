@@ -114,6 +114,7 @@ def submit_candidate(
     tool_context.state["submitted_candidate"] = plan.model_dump(mode="json")
     return {
         "status": "accepted",
+        "candidate": plan.model_dump(mode="json"),
         "total_cost_cents": plan.total_cost_cents,
         "reservation_status": "not_created_human_authorization_required",
     }

@@ -1,5 +1,6 @@
 """HTTP boundary for the operator-facing Offsite Captain workflow."""
 
+import logging
 from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, HTTPException, Query
@@ -14,6 +15,7 @@ from app.scenarios import BRIEF, invalid_plan
 from app.validators import validate_plan
 
 router = APIRouter(prefix="/product/api", tags=["product"])
+logger = logging.getLogger(__name__)
 coordinator = OffsiteCoordinator()
 repository = workflow_repository_from_env()
 coordinators = CoordinatorRegistry(repository=repository)
@@ -85,6 +87,7 @@ async def coordinate(
             )
             coordinators.set_plan(request.session_hash, live.plan)
         except Exception as exc:
+            logger.exception("Live ADK coordination failed")
             response.update(
                 agent_mode="deterministic_fallback",
                 fallback_reason=type(exc).__name__,

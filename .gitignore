@@ -186,6 +186,11 @@ testem.log
 Thumbs.db
 *.vscode*
 
+# Locally rendered demo media; publish the final video through YouTube or Vimeo.
+assets/demo/*.mov
+assets/demo/*.mp3
+assets/demo/*.mp4
+
 # ADK
 .adk/
 

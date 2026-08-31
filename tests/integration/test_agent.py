@@ -59,13 +59,18 @@ def test_agent_stream() -> None:
     )
     assert len(events) > 0, "Expected at least one message"
 
-    has_text_content = False
+    tool_trace: list[str] = []
     for event in events:
-        if (
-            event.content
-            and event.content.parts
-            and any(part.text for part in event.content.parts)
-        ):
-            has_text_content = True
-            break
-    assert has_text_content, "Expected at least one message with text content"
+        tool_trace.extend(call.name for call in event.get_function_calls())
+
+    assert tool_trace[0] == "read_constraints"
+    assert "validate_candidate" in tool_trace
+    assert set(tool_trace).issubset(
+        {
+            "read_constraints",
+            "search_inventory",
+            "validate_candidate",
+            "submit_candidate",
+        }
+    )
+    assert tool_trace[-1] == "submit_candidate"

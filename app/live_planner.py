@@ -1,5 +1,6 @@
 """Programmatic ADK runner used by the operator-facing coordination endpoint."""
 
+import logging
 from dataclasses import dataclass
 from uuid import uuid4
 
@@ -11,6 +12,8 @@ from app.agent import root_agent
 from app.models import CandidatePlan
 from app.scenarios import BRIEF
 from app.validators import validate_plan
+
+logger = logging.getLogger(__name__)
 
 
 class LivePlanningError(RuntimeError):
@@ -47,18 +50,50 @@ async def coordinate_with_adk() -> LivePlanningResult:
         ],
     )
     tool_trace: list[str] = []
+    event_trace: list[dict[str, object]] = []
+    submitted_from_response: dict[str, object] | None = None
     async for event in runner.run_async(
         user_id=user_id,
         session_id=session_id,
         new_message=message,
     ):
-        tool_trace.extend(call.name for call in event.get_function_calls())
+        calls = [call.name for call in event.get_function_calls()]
+        tool_trace.extend(calls)
+        responses = event.get_function_responses()
+        for response in responses:
+            payload = response.response
+            if (
+                response.name == "submit_candidate"
+                and isinstance(payload, dict)
+                and payload.get("status") == "accepted"
+                and isinstance(payload.get("candidate"), dict)
+            ):
+                submitted_from_response = payload["candidate"]
+        event_trace.append(
+            {
+                "author": event.author,
+                "calls": calls,
+                "responses": [
+                    response.name for response in responses
+                ],
+                "finish_reason": str(event.finish_reason),
+                "error_code": event.error_code,
+            }
+        )
 
     session = await sessions.get_session(
         app_name="app", user_id=user_id, session_id=session_id
     )
-    submitted = session.state.get("submitted_candidate") if session else None
+    submitted = (
+        session.state.get("submitted_candidate") if session else None
+    ) or submitted_from_response
     if submitted is None:
+        logger.error(
+            "ADK run produced no candidate; tools=%s events=%s state_keys=%s",
+            tool_trace,
+            event_trace,
+            sorted(session.state) if session else [],
+        )
         raise LivePlanningError("ADK run completed without a submitted candidate")
 
     plan = CandidatePlan.model_validate(submitted)

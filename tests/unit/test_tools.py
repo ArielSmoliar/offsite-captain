@@ -3,7 +3,7 @@ from typing import Any, cast
 from google.adk.tools import ToolContext
 
 from app.scenarios import invalid_plan, valid_plan
-from app.tools import validate_candidate
+from app.tools import submit_candidate, validate_candidate
 
 
 class FakeToolContext:
@@ -42,3 +42,14 @@ def test_validation_allows_seed_plus_two_distinct_model_attempts() -> None:
 
     assert response["status"] == "rejected"
     assert response["code"] == "VALIDATION_ATTEMPT_LIMIT"
+
+
+def test_submit_candidate_returns_the_accepted_validated_payload() -> None:
+    tool_context = context()
+    candidate = valid_plan().model_dump(mode="json")
+
+    response = submit_candidate(candidate, tool_context)
+
+    assert response["status"] == "accepted"
+    assert response["candidate"] == candidate
+    assert tool_context.state["submitted_candidate"] == candidate

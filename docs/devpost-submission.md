@@ -157,9 +157,9 @@ configured.
 5. Create the simulated reservations and inspect the three confirmation IDs.
 6. Retry the request if offered; the ledger must remain identical.
 
-All inventory and reservations are simulated. If a live Vertex request is
-temporarily unavailable, the interface reports deterministic fallback mode
-instead of claiming model activity.
+All inventory and reservations are simulated. The demo and testing flow must
+show a completed Gemini 3.5 Flash proposal through Google ADK before review,
+authorization, or simulated reservation creation.
 
 ## Final submission gates
 
@@ -168,6 +168,7 @@ instead of claiming model activity.
 - Confirm country of residence and whether the organization field accepts `N/A`.
 - Upload `diagrams/offsite-captain-architecture.png` to the architecture field.
 - Confirm the public hosted URL, repository, and video all load anonymously.
-- Decide and add the repository license; GitHub currently detects none.
+- Do not add a repository license without the entrant's separate explicit
+  approval.
 - Review the complete form, then obtain separate explicit approval before the
   Devpost submission action.

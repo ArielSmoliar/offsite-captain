@@ -1,0 +1,11 @@
+Planning a startup offsite looks simple—until travel windows, meeting dependencies, preparation, venue inventory, and budget all collide. Offsite Captain turns that mess into one decision-ready run sheet.
+
+Here, Gemini 3.5 Flash on Vertex AI reads the brief through bounded Google ADK tools. It finds an arrival-buffer conflict, a double-booked attendee, and missing preparation work, then repairs the proposal. The model can read and propose—but it cannot approve or reserve.
+
+Deterministic validators own the hard guarantees: attendance, dependencies, inventory versions, and cost. Every session is feasible, every preparation task has an owner, and the plan totals seven thousand nine hundred forty dollars against an eighty-five-hundred-dollar budget. Nothing has been reserved.
+
+Before any consequential action, a human authorizes this exact canonical plan hash. The approval is session-bound, cost-bound, action-scoped, and expires in ten minutes. Change the plan, inventory, browser session, or approval window, and the action fails safely.
+
+Now the backend creates the hotel, meeting room, and activity requests atomically. These reservations are simulated. Retrying returns the same ledger, so an interruption cannot produce duplicates or a partial booking.
+
+Offsite Captain runs on Cloud Run with Firestore and Vertex AI. Gemini proposes. Deterministic systems validate. Humans authorize. The backend acts safely.

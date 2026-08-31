@@ -82,8 +82,10 @@ def start_server() -> subprocess.Popen[str]:
     return process
 
 
-def wait_for_server(timeout: int = 90, interval: int = 1) -> bool:
+def wait_for_server(timeout: int | None = None, interval: int = 1) -> bool:
     """Wait for the server to be ready."""
+    if timeout is None:
+        timeout = int(os.getenv("INTEGRATION_SERVER_TIMEOUT", "90"))
     start_time = time.time()
     while time.time() - start_time < timeout:
         try:
